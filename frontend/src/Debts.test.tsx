@@ -31,7 +31,7 @@ describe('PhoneStock — créances', () => {
     render(<Debts/>);
     expect(await screen.findByText('Awa Coulibaly')).toBeTruthy();
     expect(screen.getByText('VTE-AAA123', { exact: false })).toBeTruthy();
-    expect(screen.getByText('7 000 FCFA', { exact: false })).toBeTruthy();
+    expect(screen.getAllByText('7 000 FCFA', { exact: false }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Historique des versements (1)')).toBeTruthy();
     expect(document.querySelector('.debt-card')).not.toBeNull();
   });

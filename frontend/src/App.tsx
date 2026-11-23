@@ -11,6 +11,9 @@ import Purchases from './Purchases';
 import Checkout from './Checkout';
 import Debts from './Debts';
 import ShopSettings from './ShopSettings';
+import Reports from './Reports';
+import Expenses from './Expenses';
+import Notifications from './Notifications';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -97,7 +100,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         <div className="sidebar-bottom">
           <div className="menu-divider"/>
           <button className="collapse-control" onClick={() => setCollapsed((value) => !value)}><Menu size={19}/><span>Réduire le menu</span></button>
-          <p>PhoneStock Pro · Phase 06</p>
+          <p>PhoneStock Pro · Phase 07</p>
         </div>
       </aside>
       <div className="content">
@@ -123,7 +126,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 06 · FACTURES ET REÇUS</span>
+            <div><span className="tag">PHASE 07 · RAPPORTS & DÉPENSES</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
@@ -139,24 +142,30 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <Debts />
           ) : page === 'settings' ? (
             <ShopSettings />
+          ) : page === 'reports' ? (
+            <Reports />
+          ) : page === 'expenses' ? (
+            <Expenses />
+          ) : page === 'notifications' ? (
+            <Notifications onNavigate={navigate} />
           ) : page === 'dashboard' ? (
             <>
               <section className="hero">
                 <div className="hero-text">
                   <span>UN PROPRIÉTAIRE · PC ET TÉLÉPHONE</span>
                   <h3>Une boutique mieux organisée, <em>sans complexité.</em></h3>
-                  <p>Téléphones, pochettes, ventes et créances dans une application élégante. Votre espace est désormais protégé par un compte propriétaire. Les fonctions commerciales arriveront phase par phase.</p>
+                  <p>Téléphones, pochettes, ventes et créances dans une application élégante. Votre espace est désormais protégé par un compte propriétaire. La caisse, les stocks, les factures, les créances et les rapports sont disponibles.</p>
                   <button onClick={() => navigate('checkout')}>Découvrir la caisse <ChevronRight size={17}/></button>
                 </div>
                 <Smartphone className="hero-phone" size={136} strokeWidth={1}/>
               </section>
-              <div className="section-heading"><h3>Prochaines fonctionnalités</h3><span>Feuille de route du développement</span></div>
+              <div className="section-heading"><h3>Fonctionnalités disponibles</h3><span>Les outils du propriétaire de la boutique</span></div>
               <div className="feature-grid">
                 {goals.map(({ icon: Icon, title, subtitle }) => (
                   <article className="feature-card" key={title}><div className="feature-icon"><Icon size={22}/></div><h4>{title}</h4><p>{subtitle}</p></article>
                 ))}
               </div>
-              <section className="note"><CheckCircle2 size={20}/><div><strong>Accès propriétaire sécurisé</strong><p>L'accès au tableau de bord nécessite une connexion. Les ventes et stocks seront ajoutés dans les phases suivantes.</p></div></section>
+              <section className="note"><CheckCircle2 size={20}/><div><strong>Accès propriétaire sécurisé</strong><p>L'accès au tableau de bord nécessite une connexion. Chaque vente et mouvement de stock est enregistré dans PostgreSQL.</p></div></section>
             </>
           ) : (
             <section className="placeholder">
@@ -168,7 +177,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 06 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 07 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

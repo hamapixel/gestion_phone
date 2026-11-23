@@ -15,6 +15,14 @@ describe('PhoneStock — créances', () => {
     document.cookie = 'csrftoken=debt-test-csrf; path=/';
     vi.stubGlobal('crypto', { randomUUID: () => '11111111-1111-4111-8111-111111111111' });
     vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url.startsWith('/api/debt-payments/?')) {
+        return { ok: true, json: async () => ({ results: [
+          { id: 'p0', client_ref: null, amount: '3000.00', method: 'cash',
+            created_at: '2026-11-20T10:00:00Z', sale_id: 'sale-1',
+            reference: 'VTE-AAA123', customer_name: 'Awa Coulibaly',
+            customer_phone: '75000000', kind: 'initial' },
+        ], limit: 100 }) };
+      }
       if (url.startsWith('/api/debts/?')) {
         return { ok: true, json: async () => ({
           results: [credit], summary: { outstanding: '7000.00', open_count: 1, overdue_count: 1 },
@@ -34,6 +42,10 @@ describe('PhoneStock — créances', () => {
     expect(screen.getAllByText('7 000 FCFA', { exact: false }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Historique des versements (1)')).toBeTruthy();
     expect(document.querySelector('.debt-card')).not.toBeNull();
+    expect(await screen.findByRole('heading', { name: 'Liste des paiements de créances' })).toBeTruthy();
+    expect(screen.getByText('Acompte initial')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Reçu du paiement p0' })).toBeTruthy();
+    expect(document.querySelector('.debt-history-card')).not.toBeNull();
   });
   it('encaisse la moitié avec CSRF sans modifier le montant de la vente', async () => {
     render(<Debts/>);

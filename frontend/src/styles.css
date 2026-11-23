@@ -622,3 +622,26 @@ html, body, #root {
   .invoice-table { table-layout: fixed; }
   .invoice-heading,.invoice-customer,.invoice-totals { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
+
+
+/* Liste permanente des paiements de créances — cartes PC et mobile. */
+.debt-payment-history { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 14px; min-width: 0; }
+.debt-history-heading { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px; }
+.debt-history-heading h3 { margin: 0 0 5px; font-size: 16px; color: var(--ink); }
+.debt-history-heading p, .debt-history-heading>span { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.debt-history-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.debt-history-card { display: grid; gap: 11px; background: var(--surface); border: 1px solid var(--border); padding: 14px; border-radius: 13px; min-width: 0; overflow-wrap: anywhere; }
+.debt-history-client { display: grid; gap: 5px; }
+.debt-history-client strong { font-size: 13px; color: var(--ink); }
+.debt-history-client small { font-size: 11px; color: var(--muted); }
+.debt-history-details { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 11px; color: var(--muted); }
+.debt-history-kind { background: var(--bg); padding: 5px 8px; border-radius: 8px; color: var(--ink); font-weight: 650; }
+.debt-history-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+.debt-history-bottom strong { font-size: 16px; color: var(--ink); overflow-wrap: anywhere; }
+.debt-history-bottom .debt-document { flex: 0 0 auto; min-height: 38px; }
+.debt-history-empty { padding: 22px 14px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 12px; font-size: 12px; text-align: center; }
+@media (max-width: 760px) {
+  .debt-history-grid { grid-template-columns: minmax(0,1fr); }
+  .debt-history-card { padding: 12px; }
+  .debt-history-heading h3 { font-size: 14px; }
+}

@@ -77,3 +77,7 @@ Les ventes payées à moitié ou à crédit apparaissent dans « Créances » av
 Dans **Paramètres**, configurer le nom de la boutique, téléphone, adresse, email, NIF/RCCM, message de pied de page et logo PNG/JPG/WebP (90 Ko maximum). Chaque modification crée une **version immuable** de l'en-tête. Les ventes gardent la version active au moment de la vente. Les ventes existantes avant cette mise à jour reçoivent une seule fois l'en-tête initial par défaut lors de la migration.
 
 Depuis **Caisse > Dernières ventes** ou après une vente, cliquer **Facture** ; depuis **Créances**, cliquer **Facture** ou **Reçu** sur un versement. L'aperçu contient les lignes, montants, IMEI des téléphones, paiement et solde sans exposer le coût d'achat ni la marge. Choisir **A4, A5 ou Ticket 80 mm**, puis utiliser « Imprimer / Enregistrer en PDF » : la fonction PDF repose sur le dialogue d'impression du navigateur, pas sur un export PDF serveur.
+
+### Liste des paiements de créances
+
+En bas de la page « Créances », une section **Liste des paiements de créances** montre directement les 100 derniers acomptes initiaux et remboursements des ventes à crédit, avec client, référence, date, moyen de paiement, montant et bouton Reçu. Elle reste visible après paiement complet, indépendamment du filtre En cours/Payées, et suit la recherche du client. Le chiffre d’affaires n’est jamais additionné une deuxième fois lors d’un remboursement. Les cartes s’adaptent aux téléphones.

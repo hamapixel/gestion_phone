@@ -8,6 +8,11 @@ type Debt = {
   due_date: string | null; overdue: boolean; total: string; amount_paid: string;
   balance: string; status: 'credit' | 'paid'; payments: Payment[];
 };
+type DebtPayment = Payment & {
+  sale_id: string; reference: string; customer_name: string; customer_phone: string;
+  kind: 'initial' | 'repayment';
+};
+type DebtPaymentList = { results: DebtPayment[]; limit: number };
 type DebtList = {
   results: Debt[];
   summary: { outstanding: string; open_count: number; overdue_count: number };
@@ -30,6 +35,9 @@ function formattedDate(value: string) {
 }
 export default function Debts() {
   const [list, setList] = useState<DebtList | null>(null);
+  const [payments, setPayments] = useState<DebtPaymentList | null>(null);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [paymentsError, setPaymentsError] = useState('');
   const [filter, setFilter] = useState<Filter>('open');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,6 +68,25 @@ export default function Debts() {
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [filter, query, notice]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setPaymentsLoading(true);
+    fetch('/api/debt-payments/?q=' + encodeURIComponent(query), {
+      credentials: 'same-origin', signal: controller.signal,
+    })
+      .then(readResponse)
+      .then((data: DebtPaymentList) => {
+        if (!controller.signal.aborted) { setPayments(data); setPaymentsError(''); }
+      })
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted) setPaymentsError(
+          err instanceof Error ? err.message : 'Paiements indisponibles.'
+        );
+      })
+      .finally(() => { if (!controller.signal.aborted) setPaymentsLoading(false); });
+    return () => controller.abort();
+  }, [query, notice]);
 
   function openPayment(debt: Debt) {
     if (Number(debt.balance) <= 0) return;
@@ -187,7 +214,44 @@ export default function Debts() {
       ) : <div className="debt-empty"><Wallet size={32}/><p>Aucune créance pour ce filtre.</p>
         <small>Les ventes à crédit enregistrées dans la caisse apparaissent automatiquement ici.</small>
       </div>)}
-      {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>}
+      <section className="debt-payment-history" aria-labelledby="debt-history-heading">
+        <div className="debt-history-heading">
+          <div>
+            <h3 id="debt-history-heading">Liste des paiements de créances</h3>
+            <p>Acomptes et remboursements enregistrés, y compris les dettes entièrement payées.</p>
+          </div>
+          {payments && <span>{payments.results.length} paiement(s) affiché(s)</span>}
+        </div>
+        {paymentsLoading && <p className="catalog-empty">Chargement des paiements…</p>}
+        {paymentsError && <p className="catalog-error" role="alert">{paymentsError}</p>}
+        {!paymentsLoading && payments && (payments.results.length > 0 ?
+          <div className="debt-history-grid">
+            {payments.results.map((payment) => (
+              <article className="debt-history-card" key={payment.id}>
+                <div className="debt-history-client">
+                  <strong>{payment.customer_name}</strong>
+                  <small>{payment.reference} · {payment.customer_phone}</small>
+                </div>
+                <div className="debt-history-details">
+                  <span>{formattedDate(payment.created_at)}</span>
+                  <span>{methods[payment.method] || payment.method}</span>
+                  <span className="debt-history-kind">{payment.kind === 'initial' ? 'Acompte initial' : 'Remboursement'}</span>
+                </div>
+                <div className="debt-history-bottom">
+                  <strong>{money(payment.amount)}</strong>
+                  <button type="button" className="debt-document"
+                    aria-label={'Reçu du paiement ' + payment.id}
+                    onClick={() => setDocumentPayment(payment.id)}>
+                    <ReceiptText size={15}/> Reçu
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div> :
+          <p className="debt-history-empty">Aucun paiement de créance enregistré pour cette recherche.</p>
+        )}
+      </section>
+      {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>
       {documentPayment && <InvoiceModal paymentId={documentPayment} onClose={() => setDocumentPayment(null)}/>}
       {selected && (
         <div className="catalog-backdrop">

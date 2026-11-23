@@ -101,6 +101,39 @@ class DebtTests(TestCase):
         self.assertEqual(today["total"], "0.00")
         self.assertEqual(today["cash_collected"], "1000.00")
 
+    def test_payment_list_shows_initial_and_repayments_after_debt_is_paid(self):
+        created = self.credit(paid="1000", name="Awa Coulibaly")
+        sale_id = created.json()["sale"]["id"]
+        collected = self.collect(sale_id, "3000", method="orange")
+        self.assertEqual(collected.status_code, 201, collected.content)
+
+        response = self.client.get(reverse("debt-payments"))
+        self.assertEqual(response.status_code, 200)
+        payments = response.json()["results"]
+        self.assertEqual(len(payments), 2)
+        self.assertEqual(payments[0]["kind"], "repayment")
+        self.assertEqual(payments[0]["amount"], "3000.00")
+        self.assertEqual(payments[0]["customer_name"], "Awa Coulibaly")
+        self.assertEqual(payments[0]["sale_id"], sale_id)
+        self.assertEqual(payments[1]["kind"], "initial")
+        self.assertEqual(payments[1]["amount"], "1000.00")
+        self.assertTrue(payments[0]["reference"].startswith("VTE-"))
+        self.assertEqual(self.client.get(reverse("debts")).json()["results"], [])
+        self.assertEqual(len(self.client.get(reverse("debt-payments") + "?q=Awa").json()["results"]), 2)
+        self.assertEqual(len(self.client.get(reverse("debt-payments") + "?q=Inconnu").json()["results"]), 0)
+
+    def test_cash_sale_with_named_customer_is_not_listed_as_debt_payment(self):
+        response = self.credit(paid="4000", name="Awa", phone="75000000")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(self.client.get(reverse("debt-payments")).json()["results"], [])
+
+    def test_payment_list_requires_owner_authentication(self):
+        guest = Client()
+        self.assertEqual(guest.get(reverse("debt-payments")).status_code, 401)
+        standard = get_user_model().objects.create_user(username="cashier", password="StrongPass+2026")
+        guest.force_login(standard)
+        self.assertEqual(guest.get(reverse("debt-payments")).status_code, 401)
+
     def test_auth_and_csrf_required(self):
         sale_id = self.credit().json()["sale"]["id"]
         guest = Client()

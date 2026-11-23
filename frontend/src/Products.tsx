@@ -261,7 +261,7 @@ export default function Products() {
                   {imeiHint(imeis) && <div className="catalog-imei-guide">
                     <span>{imeiHint(imeis)?.message}</span>
                     {imeiHint(imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => setImeis(imeiHint(imeis)!.suggested!)}>Compléter les 15 chiffres</button>}
-                  </div>
+                  </div>}
                 </div>
               ) : (
                 <>

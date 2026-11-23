@@ -251,7 +251,7 @@ export default function Debts() {
           <p className="debt-history-empty">Aucun paiement de créance enregistré pour cette recherche.</p>
         )}
       </section>
-      {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>
+      {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>}
       {documentPayment && <InvoiceModal paymentId={documentPayment} onClose={() => setDocumentPayment(null)}/>}
       {selected && (
         <div className="catalog-backdrop">

@@ -52,6 +52,9 @@ export default function Debts() {
   const [notice, setNotice] = useState('');
   const [documentSale, setDocumentSale] = useState<string | null>(null);
   const [documentPayment, setDocumentPayment] = useState<string | null>(null);
+  const [reminder, setReminder] = useState<Debt | null>(null);
+  const [reminderTone, setReminderTone] = useState<'polite' | 'firm'>('polite');
+  const [reminderText, setReminderText] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -134,15 +137,29 @@ export default function Debts() {
     }
     setSelected(null); setError('');
   }
-  const openWhatsApp = (debt: Debt) => {
-    const phone = debt.customer_phone.replace(/[^\d]/g, '');
+  function messageFor(debt: Debt, tone: 'polite' | 'firm') {
+    const subject = debt.reference + ' — ' + money(debt.balance) + ' restant à régler' +
+      (debt.due_date ? ', échéance ' + formattedDate(debt.due_date + 'T00:00:00') : '');
+    return tone === 'polite'
+      ? 'Bonjour ' + debt.customer_name + ', petit rappel concernant votre achat ' + subject +
+        '. Merci pour votre règlement. Bien cordialement.'
+      : 'Bonjour ' + debt.customer_name + ', nous vous rappelons que le paiement lié à ' +
+        subject + ' est toujours attendu. Merci de régulariser votre situation rapidement.';
+  }
+  function openReminder(debt: Debt) {
+    setReminder(debt);
+    setReminderTone('polite');
+    setReminderText(messageFor(debt, 'polite'));
+  }
+  function openWhatsApp() {
+    if (!reminder) return;
+    const phone = reminder.customer_phone.replace(/[^\d]/g, '');
     if (!phone) return;
     const destination = phone.startsWith('223') ? phone : '223' + phone;
-    const message = 'Bonjour ' + debt.customer_name + ', concernant votre achat ' + debt.reference +
-      ', il reste ' + money(debt.balance) + ' à régler' +
-      (debt.due_date ? ' (échéance : ' + debt.due_date + ')' : '') + '. Merci.';
-    window.open('https://wa.me/' + destination + '?text=' + encodeURIComponent(message), '_blank', 'noopener,noreferrer');
-  };
+    window.open('https://wa.me/' + destination + '?text=' + encodeURIComponent(reminderText),
+      '_blank', 'noopener,noreferrer');
+    setReminder(null);
+  }
 
   return (
     <section className="debt-page">
@@ -204,7 +221,7 @@ export default function Debts() {
                 {Number(debt.balance) > 0 && <button className="debt-pay" onClick={() => openPayment(debt)}>
                   <CreditCard size={16}/> Encaisser
                 </button>}
-                {Number(debt.balance) > 0 && <button className="debt-remind" onClick={() => openWhatsApp(debt)}>
+                {Number(debt.balance) > 0 && <button className="debt-remind" onClick={() => openReminder(debt)}>
                   Relancer WhatsApp
                 </button>}
               </div>
@@ -253,6 +270,35 @@ export default function Debts() {
       </section>
       {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>}
       {documentPayment && <InvoiceModal paymentId={documentPayment} onClose={() => setDocumentPayment(null)}/>}
+      {reminder && (
+        <div className="catalog-backdrop">
+          <section role="dialog" aria-modal="true" aria-labelledby="reminder-modal-title" className="catalog-modal debt-reminder-modal">
+            <div className="catalog-modal-header">
+              <div><h3 id="reminder-modal-title">Relance WhatsApp</h3>
+                <p>{reminder.customer_name} · {money(reminder.balance)} à recevoir</p></div>
+              <button className="catalog-close" aria-label="Fermer la relance" onClick={() => setReminder(null)}><X size={18}/></button>
+            </div>
+            <div className="catalog-form">
+              <div className="debt-modes">
+                <button type="button" className={reminderTone === 'polite' ? 'selected' : ''}
+                  onClick={() => { setReminderTone('polite'); setReminderText(messageFor(reminder, 'polite')); }}>Poli</button>
+                <button type="button" className={reminderTone === 'firm' ? 'selected' : ''}
+                  onClick={() => { setReminderTone('firm'); setReminderText(messageFor(reminder, 'firm')); }}>Ferme</button>
+              </div>
+              <div className="catalog-field">
+                <label htmlFor="reminder-text">Message à personnaliser</label>
+                <textarea id="reminder-text" rows={6} maxLength={1200} value={reminderText}
+                  onChange={(event) => setReminderText(event.target.value)}/>
+              </div>
+              <p className="debt-reminder-note">WhatsApp s'ouvrira avec le message préparé. Tu choisis ensuite si tu veux l'envoyer.</p>
+              <div className="catalog-form-footer">
+                <button className="catalog-cancel" onClick={() => setReminder(null)}>Annuler</button>
+                <button className="catalog-primary" disabled={!reminderText.trim()} onClick={openWhatsApp}>Ouvrir WhatsApp</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
       {selected && (
         <div className="catalog-backdrop">
           <section role="dialog" aria-modal="true" aria-labelledby="debt-modal-title" className="catalog-modal debt-modal">

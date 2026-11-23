@@ -7,7 +7,7 @@
 - **Phase 05** : caisse rapide et panier intelligent, IMEI obligatoires pour téléphones, paiements complets ou partiels, clients identifiés pour crédit, historique et vente atomique/idempotente.
 - **Phase 06** : en-tête personnalisable versionné (nom, logo, coordonnées, NIF), factures de vente et reçus de versement imprimables A4/A5/80 mm, enregistrement PDF via impression navigateur.
 - **Phase 05 (complément)** : liste réelle des créances et encaissements partiels idempotents ; sans doubler le chiffre d'affaires.
-- **Phase 07** : relances WhatsApp, dépenses, rapports et notifications.
+- **Phase 07** : rapports journaliers/hebdomadaires/mensuels/annuels et périodes personnalisées, dépenses simples, résultat brut moins dépenses, alertes stocks et échéances calculées à l'ouverture, relances WhatsApp préremplies.
 - **Phase 08** : SQLite locale, synchronisation idempotente et gestion des conflits hors ligne.
 - **Phase 09** : Tauri Windows, Capacitor Android, activation sécurisée, distribution et sauvegarde.
 

@@ -2,12 +2,12 @@
 
 Socle technique de l'application de gestion de téléphones, pochettes et produits divers. **Chaque logiciel est réservé au propriétaire de la boutique : un seul compte, sans rôles gérant/vendeur.** Le propriétaire pourra utiliser le même compte sur son PC et son téléphone (synchronisation prévue dans une phase ultérieure).
 
-## Démarrage Windows (Phase 04 : achats fournisseurs)
+## Démarrage Windows (Phase 05 : caisse intelligente)
 
 ~~~powershell
 git clone https://github.com/hamapixel/gestion_phone.git
 cd gestion_phone
-git switch feature/phase-04-purchases-suppliers
+git switch feature/phase-05-smart-pos-sales
 Copy-Item .env.example .env
 docker compose up --build -d
 docker compose ps
@@ -59,3 +59,11 @@ docker compose logs --tail 25 frontend
 ~~~
 
 Attendre dans les journaux le message `VITE ... ready`, puis ouvrir `http://localhost:5178` et faire `Ctrl + Shift + R`. Tester éventuellement dans une fenêtre privée. **Ne pas exécuter `docker compose down -v` : cette commande détruirait les volumes PostgreSQL.**
+
+## Phase 05 — Caisse et ventes
+
+Dans « Caisse », rechercher un article et cliquer Ajouter. Pour un téléphone, scanner ou saisir son IMEI de 15 chiffres (ou choisir un IMEI du stock proposé) ; chaque téléphone physique ne peut être vendu qu'une fois. Pour les pochettes/accessoires, utiliser les boutons +/− de quantité. Les prix peuvent être modifiés dans le panier par le propriétaire.
+
+Choisir **Tout**, **Moitié** ou **Autre montant**, puis le moyen de paiement. En cas de reste à payer, nom et téléphone du client sont obligatoires ; le remboursement ultérieur sera ajouté en Phase 07. Après validation, les mouvements de stock et le bénéfice brut sont enregistrés dans PostgreSQL et la vente apparaît dans l'historique. La facture personnalisée et l'impression sont prévues en Phase 06. La caisse nécessite actuellement une connexion au serveur (offline : phase ultérieure).
+
+La référence `client_ref` rend un nouvel envoi identique sûr contre les ventes en double. Si une coupure survient pendant l'enregistrement, utiliser « Réessayer la même vente » sans modifier le panier. Ne jamais arrêter Docker avec `down -v`.

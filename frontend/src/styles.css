@@ -81,3 +81,73 @@ footer { text-align: center; padding: 12px 15px 25px; color: var(--muted); font-
 @keyframes auth-spin { to { transform: rotate(360deg); } }
 :root[data-theme="dark"] .auth-error { background: #4c1f28; border-color: #733647; color: #ffb9bd; }
 @media (max-width: 440px) { .auth-card { padding: 24px; border-radius: 16px; }.auth-screen { padding: 14px; } }
+
+
+/* Phase 03 : catalogue et formulaires courts, adaptés PC et mobile */
+.catalog-toolbar { display: flex; align-items: center; gap: 10px; margin: 0 0 17px; flex-wrap: wrap; }
+.catalog-search { position: relative; flex: 1; min-width: 210px; }
+.catalog-search svg { position: absolute; top: 12px; left: 12px; color: var(--muted); }
+.catalog-search input,.catalog-category { min-height: 43px; width: 100%; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 13px; font: inherit; font-size: 12px; }
+.catalog-search input { padding-left: 39px; }
+.catalog-category { width: 172px; }
+.catalog-add,.catalog-primary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: #2563eb; color: white; border: 0; border-radius: 10px; padding: 0 16px; min-height: 43px; font-size: 12px; font-weight: 750; }
+.catalog-add:disabled,.catalog-primary:disabled { opacity: .55; cursor: wait; }
+.catalog-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 19px; }
+.catalog-summary span { border-radius: 12px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+.catalog-summary strong { color: var(--ink); }
+.catalog-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; }
+.catalog-table { border-collapse: collapse; width: 100%; min-width: 690px; font-size: 12px; }
+.catalog-table th { text-align: left; color: var(--muted); padding: 15px 16px; background: var(--bg); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.catalog-table td { padding: 15px 16px; border-top: 1px solid var(--border); }
+.catalog-itemname { font-weight: 700; display: block; color: var(--ink); }.catalog-ref { font-size: 10px; color: var(--muted); display: block; margin-top: 5px; }
+.catalog-number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.catalog-stock { background: #e8f7ee; border-radius: 40px; color: #147b41; font-size: 11px; font-weight: 800; padding: 6px 9px; white-space: nowrap; }
+.catalog-stock.low { background: #fff4db; color: #9d5e06; }
+.catalog-action { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 7px 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.catalog-action:hover { background: var(--bg); }
+.catalog-empty { text-align: center; padding: 50px 18px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+.catalog-error { border: 1px solid #ffd5d5; background: #fff2f1; color: #ad2929; border-radius: 10px; padding: 10px 13px; margin: 0 0 14px; font-size: 12px; }
+.catalog-backdrop { position: fixed; inset: 0; z-index: 25; background: rgba(4, 13, 29, .59); display: grid; place-items: center; padding: 20px; }
+.catalog-modal { background: var(--surface); color: var(--ink); width: min(100%, 540px); max-height: calc(100dvh - 40px); overflow-y: auto; border: 1px solid var(--border); border-radius: 17px; padding: 23px; box-shadow: 0 30px 90px #0005; }
+.catalog-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.catalog-modal-header h3 { margin: 0 0 6px; font-size: 18px; }.catalog-modal-header p { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.catalog-close { border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 9px; display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; }
+.catalog-form { display: grid; gap: 13px; }
+.catalog-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.catalog-field { display: grid; gap: 6px; min-width: 0; }
+.catalog-field label { font-size: 11px; font-weight: 750; color: var(--ink); }
+.catalog-field input,.catalog-field select,.catalog-field textarea { border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 9px; font: inherit; font-size: 12px; width: 100%; min-height: 41px; padding: 9px 11px; }
+.catalog-field textarea { min-height: 105px; resize: vertical; line-height: 1.6; }
+.catalog-field small { font-size: 10px; color: var(--muted); line-height: 1.5; }
+.catalog-form-footer { display: flex; justify-content: flex-end; gap: 9px; margin-top: 6px; }
+.catalog-cancel { border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 0 15px; min-height: 42px; font-weight: 650; font-size: 12px; }
+:root[data-theme="dark"] .catalog-stock { background: #1e4e37; color: #9be7ba; }
+:root[data-theme="dark"] .catalog-stock.low { background: #514019; color: #ffdb93; }
+:root[data-theme="dark"] .catalog-error { background: #49242a; border-color: #703b40; color: #ffb8b8; }
+@media (max-width:760px) { .catalog-add { width: 100%; } .catalog-category { flex: 1; } .catalog-fields { grid-template-columns: 1fr; } .catalog-modal { padding: 18px; } .catalog-backdrop { padding: 10px; } }
+
+/* Actions de saisie rapide : téléphone avec IMEI ou article sans IMEI. */
+.catalog-add-other { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 43px; padding: 0 14px; font-size: 12px; }
+@media (max-width: 760px) { .catalog-add-other { width: 100%; } }
+
+/* Aide à la saisie IMEI : jamais de correction silencieuse. */
+.catalog-imei-guide { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); color: var(--ink); border-radius: 10px; font-size: 11px; line-height: 1.65; }
+.catalog-imei-guide .catalog-action { color: var(--blue); }
+
+/* Fiche produit et édition — boutons directs et historique lisible. */
+.catalog-row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.catalog-row-actions .catalog-action { display: inline-flex; align-items: center; gap: 6px; }
+.catalog-details { display: grid; gap: 16px; }
+.catalog-detail-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.catalog-detail-list > div { display: grid; gap: 6px; padding: 11px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+.catalog-detail-list span { color: var(--muted); font-size: 11px; }
+.catalog-detail-list strong { font-size: 12px; overflow-wrap: anywhere; }
+.catalog-detail-section { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+.catalog-detail-section h4 { margin: 0 0 5px; font-size: 13px; }
+.catalog-detail-section p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.catalog-imei-row,.catalog-history-row { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 5px; overflow-wrap: anywhere; }
+.catalog-imei-row span,.catalog-history-row span { color: var(--muted); font-size: 11px; }
+.catalog-imei-row strong,.catalog-history-row strong { font-size: 12px; }
+.catalog-history-row small { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.catalog-edit-note { margin: 0; padding: 10px 12px; border-radius: 9px; background: var(--bg); color: var(--muted); font-size: 11px; line-height: 1.6; }
+@media(max-width: 480px) { .catalog-detail-list { grid-template-columns: 1fr; } }

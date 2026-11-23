@@ -2,7 +2,7 @@ name: PhoneStock Pro checks
 
 on:
   push:
-    branches: [main, feature/phase-01-socle, feature/phase-02-owner-auth-sticky-header]
+    branches: [main, feature/phase-01-socle, feature/phase-02-owner-auth-sticky-header, feature/phase-03-catalog-stock-imei]
   pull_request:
 
 jobs:

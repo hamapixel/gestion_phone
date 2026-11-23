@@ -10,7 +10,7 @@ export type OfflineProduct = {
   condition: 'new' | 'used'; quantity: number; sale_price: string;
 };
 export type OfflineSalePayload = {
-  client_ref: string;
+  client_ref: string; origin: 'offline'; device_ref: string;
   lines: { product_id: string; quantity: number; unit_price: string; imei: string }[];
   amount_paid: string; method: string; customer_name: string; customer_phone: string; due_date: string | null;
 };
@@ -21,7 +21,7 @@ export type PendingSale = {
 export type CatalogSnapshot = { updated_at: string; products: OfflineProduct[] };
 
 type Envelope = { version: 1; iv: string; ciphertext: string };
-type VaultConfig = { version: 1; salt: string; proof: Envelope };
+type VaultConfig = { version: 1; salt: string; proof: Envelope; device_ref: string };
 
 const DB_NAME = 'phonestock-offline-v1';
 const STORE = 'secure-records';
@@ -143,7 +143,9 @@ export async function unlockVault(passphrase: string) {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const key = await deriveKey(passphrase, salt);
     const proof = await seal(key, { marker: 'phonestock-offline-v1' });
-    await putRecord('config', { version: 1, salt: base64(salt), proof } satisfies VaultConfig);
+    await putRecord('config', {
+      version: 1, salt: base64(salt), proof, device_ref: crypto.randomUUID(),
+    } satisfies VaultConfig);
     vaultKey = key;
   }
 }
@@ -174,4 +176,17 @@ export async function listPending(): Promise<PendingSale[]> {
 export async function deletePending(id: string) {
   requireKey();
   await removeRecord('sale:' + id);
+}
+
+
+/** Stable opaque device identifier, only used for authorized sale audit. */
+export async function getDeviceRef() {
+  requireKey();
+  const config = await getRecord<VaultConfig>('config');
+  if (!config) throw new Error('Configuration du coffre introuvable.');
+  if (!config.device_ref) {
+    config.device_ref = crypto.randomUUID();
+    await putRecord('config', config);
+  }
+  return config.device_ref;
 }

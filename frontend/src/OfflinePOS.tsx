@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { CloudUpload, LockKeyhole, RefreshCw, Save, ShieldAlert, Smartphone, Trash2, WifiOff } from 'lucide-react';
 import InvoiceModal from './InvoiceModal';
-import { deletePending, hasVault, isUnlocked, listPending, lockVault, readCatalog,
+import { deletePending, getDeviceRef, hasVault, isUnlocked, listPending, lockVault, readCatalog,
   saveCatalog, savePending, unlockVault, type CatalogSnapshot, type OfflineProduct, type PendingSale,
   type OfflineSalePayload } from './offlineVault';
 import { syncPendingSales } from './offlineSync';
@@ -163,8 +163,11 @@ export default function OfflinePOS({ standalone = false, onBack }: {
       setError('Nom et téléphone obligatoires pour les ventes à crédit.'); return;
     }
     const client_ref = crypto.randomUUID();
-    const payload: OfflineSalePayload = {
-      client_ref,
+    setBusy(true); setError('');
+    try {
+      const device_ref = await getDeviceRef();
+      const payload: OfflineSalePayload = {
+      client_ref, origin: 'offline', device_ref,
       lines: cart.map((line) => ({
         product_id: line.product.id, quantity: line.quantity,
         unit_price: Number(line.price).toFixed(2), imei: line.imei,
@@ -173,8 +176,6 @@ export default function OfflinePOS({ standalone = false, onBack }: {
       customer_name: customerName.trim(), customer_phone: customerPhone.trim(),
       due_date: dueDate || null,
     };
-    setBusy(true); setError('');
-    try {
       await savePending({
         id: client_ref, payload, created_at: new Date().toISOString(),
         status: 'pending', error: '',

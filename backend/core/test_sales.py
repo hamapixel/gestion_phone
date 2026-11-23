@@ -162,6 +162,30 @@ class SaleTests(TestCase):
                          customer_name="Awa", customer_phone="76000000")
         self.assertEqual(c.status_code, 409)
 
+    def test_offline_sale_records_source_device_and_replays_safely(self):
+        reference = str(uuid.uuid4())
+        device = str(uuid.uuid4())
+        first, _ = self.sale(ref=reference, origin="offline", device_ref=device)
+        retry, _ = self.sale(ref=reference, origin="offline", device_ref=device)
+        self.assertEqual(first.status_code, 201, first.content)
+        self.assertEqual(retry.status_code, 200, retry.content)
+        self.assertTrue(retry.json()["replayed"])
+        saved = Sale.objects.get(client_ref=reference)
+        self.assertEqual(saved.origin, "offline")
+        self.assertEqual(str(saved.device_ref), device)
+        self.assertEqual(Sale.objects.count(), 1)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.quantity, 8)
+        altered, _ = self.sale(ref=reference, origin="offline", device_ref=str(uuid.uuid4()))
+        self.assertEqual(altered.status_code, 409)
+
+    def test_offline_sale_requires_device_identifier(self):
+        bad, _ = self.sale(origin="offline")
+        self.assertEqual(bad.status_code, 400)
+        bad, _ = self.sale(origin="invalid")
+        self.assertEqual(bad.status_code, 400)
+        self.assertEqual(Sale.objects.count(), 0)
+
     def test_sale_lines_keep_original_product_name_when_catalog_is_edited(self):
         response, _ = self.sale()
         self.case.name = "Pochette modifiée"

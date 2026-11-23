@@ -21,6 +21,10 @@ MAX_LINE_QTY = 1000
 ZERO = Decimal("0.00")
 
 
+def currency(value):
+    return str(Decimal(value).quantize(Decimal("0.01")))
+
+
 def sale_data(sale):
     lines = []
     for line in sale.lines.select_related("product", "phone_unit").all():
@@ -36,10 +40,10 @@ def sale_data(sale):
             "condition": line.product_condition,
             "quantity": line.quantity,
             "imei": primary_imei,
-            "unit_price": str(line.unit_price),
-            "unit_cost": str(line.unit_cost),
-            "total": str(line.line_total),
-            "line_profit": str(line.line_total - line.line_cost),
+            "unit_price": currency(line.unit_price),
+            "unit_cost": currency(line.unit_cost),
+            "total": currency(line.line_total),
+            "line_profit": currency(line.line_total - line.line_cost),
         })
     return {
         "id": str(sale.id), "reference": "VTE-" + sale.id.hex[:10].upper(),
@@ -48,8 +52,8 @@ def sale_data(sale):
         "status": sale.status, "method": sale.method,
         "customer_name": sale.customer_name, "customer_phone": sale.customer_phone,
         "due_date": sale.due_date.isoformat() if sale.due_date else None,
-        "total": str(sale.total), "amount_paid": str(sale.amount_paid),
-        "balance": str(sale.balance), "gross_profit": str(sale.gross_profit),
+        "total": currency(sale.total), "amount_paid": currency(sale.amount_paid),
+        "balance": currency(sale.balance), "gross_profit": currency(sale.gross_profit),
         "lines": lines,
     }
 
@@ -66,7 +70,7 @@ def sales(request):
         )
         return JsonResponse({
             "results": [sale_data(s) for s in latest],
-            "today": {key: str(value or ZERO) for key, value in stats.items()},
+            "today": {key: currency(value or ZERO) for key, value in stats.items()},
             "limit": 80,
         })
 

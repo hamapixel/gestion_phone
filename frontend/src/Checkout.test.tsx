@@ -99,6 +99,18 @@ describe('PhoneStock Pro — caisse intelligente', () => {
     });
   });
 
+
+  it('ne répète pas la marque lorsque le nom contient déjà Samsung', async () => {
+    const repeated = { ...phone, name: 'Samsung Galaxy A17', brand: 'Samsung', model: 'Galaxy A17' };
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.startsWith('/api/products/?q=')) return { ok: true, json: async () => ({ results: [repeated] }) };
+      if (url === '/api/sales/') return { ok: true, json: async () => salesList };
+      throw new Error('Route inattendue : ' + url);
+    }));
+    render(<Checkout/>);
+    expect(await screen.findByRole('button', { name: 'Ajouter Samsung Galaxy A17' })).toBeTruthy();
+    expect(screen.queryByText('Samsung Galaxy A17 · Samsung · Galaxy A17')).toBeNull();
+  });
   it('demande un IMEI pour ajouter un téléphone au panier', async () => {
     render(<Checkout/>);
     fireEvent.click(await screen.findByRole('button', { name: 'Ajouter Téléphone · Samsung · Galaxy A17' }));

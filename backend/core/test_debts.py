@@ -86,6 +86,21 @@ class DebtTests(TestCase):
         self.assertEqual(SalePayment.objects.filter(sale_id=sale_id).count(), 2)
         self.assertEqual(self.collect(sale_id, "2000", ref=key).status_code, 409)
 
+    def test_cash_collected_today_uses_payment_day_not_sale_day(self):
+        old = self.credit()
+        sale_id = old.json()["sale"]["id"]
+        sale = Sale.objects.get(pk=sale_id)
+        Sale.objects.filter(pk=sale_id).update(created_at=timezone.now() - timedelta(days=3))
+        # Old initial payment also predates today.
+        SalePayment.objects.filter(sale_id=sale_id).update(
+            created_at=timezone.now() - timedelta(days=3)
+        )
+        response = self.collect(sale_id, "1000")
+        self.assertEqual(response.status_code, 201)
+        today = self.client.get(reverse("sales")).json()["today"]
+        self.assertEqual(today["total"], "0.00")
+        self.assertEqual(today["cash_collected"], "1000.00")
+
     def test_auth_and_csrf_required(self):
         sale_id = self.credit().json()["sale"]["id"]
         guest = Client()

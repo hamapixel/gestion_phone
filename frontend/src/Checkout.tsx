@@ -32,7 +32,13 @@ const token = () => {
   return part ? decodeURIComponent(part.substring('csrftoken='.length)) : '';
 };
 const toMoney = (n: number) => n.toFixed(2);
-const productLabel = (p: Product) => [p.name, p.brand, p.model].filter(Boolean).join(' · ');
+const productLabel = (p: Product) => {
+  const parts = [p.name];
+  const lower = p.name.toLocaleLowerCase('fr');
+  if (p.brand && !lower.includes(p.brand.toLocaleLowerCase('fr'))) parts.push(p.brand);
+  if (p.model && !lower.includes(p.model.toLocaleLowerCase('fr'))) parts.push(p.model);
+  return parts.join(' · ');
+};
 async function readJson(response: Response) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.detail ?? 'Opération impossible.');

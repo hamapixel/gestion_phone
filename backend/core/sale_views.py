@@ -65,9 +65,14 @@ def sales(request):
         latest = Sale.objects.select_related("owner").order_by("-created_at")[:80]
         today = timezone.localdate()
         stats = Sale.objects.filter(created_at__date=today).aggregate(
-            total=Sum("total"), cash_collected=Sum("amount_paid"),
-            balance=Sum("balance"), gross_profit=Sum("gross_profit"),
+            total=Sum("total"), balance=Sum("balance"),
+            gross_profit=Sum("gross_profit"),
         )
+        # Date of actual collection matters: a repayment received today
+        # is today's cash inflow, not new sales revenue on the original date.
+        stats["cash_collected"] = SalePayment.objects.filter(
+            created_at__date=today
+        ).aggregate(total=Sum("amount"))["total"] or ZERO
         return JsonResponse({
             "results": [sale_data(s) for s in latest],
             "today": {key: currency(value or ZERO) for key, value in stats.items()},

@@ -3,7 +3,7 @@ import { Barcode, Boxes, Plus, Search, Smartphone, X } from 'lucide-react';
 
 type Category = 'phone' | 'case' | 'other';
 type Product = {
-  id: string; name: string; category: Category; sku: string; brand: string; model: string;
+  id: string; name: string; category: Category; sku: string; brand: string; model: string; condition: 'new' | 'used';
   purchase_price: string; sale_price: string; quantity: number;
   low_stock_threshold: number; low_stock: boolean;
 };
@@ -12,10 +12,10 @@ type Dialog =
   | { type: 'imeis'; product: Product }
   | { type: 'stock'; product: Product };
 type NewForm = {
-  name: string; model: string; purchase_price: string; sale_price: string; quantity: string; imeis: string;
+  name: string; brand: string; model: string; condition: 'new' | 'used'; purchase_price: string; sale_price: string; quantity: string; imeis: string;
 };
 const fresh: NewForm = {
-  name: '', model: '', purchase_price: '', sale_price: '', quantity: '0', imeis: '',
+  name: '', brand: '', model: '', condition: 'new', purchase_price: '', sale_price: '', quantity: '0', imeis: '',
 };
 const xof = (value: string | number) => new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 2,
@@ -26,11 +26,38 @@ function csrfCookie() {
   return token ? decodeURIComponent(token.substring('csrftoken='.length)) : '';
 }
 
+function imeiLastDigit(first14: string): string {
+  let total = 0;
+  for (let index = 0; index < first14.length; index += 1) {
+    let digit = Number(first14[index]);
+    if (index % 2 === 1) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    total += digit;
+  }
+  return String((10 - total % 10) % 10);
+}
+
+function imeiHint(text: string): { suggested?: string; message: string } | null {
+  const raw = text.trim();
+  if (!raw || raw.includes('\n') || raw.includes(',') || raw.includes(';')) return null;
+  const digits = raw.replace(/[\s-]+/g, '');
+  if (!/^\d+$/.test(digits)) return { message: "L'IMEI ne doit contenir que des chiffres." };
+  if (digits.length === 14) {
+    const suggested = digits + imeiLastDigit(digits);
+    return { suggested, message: "14 chiffres saisis : le 15e chiffre calculé est " + suggested[14] + ". Vérifie avec *#06# avant de l'utiliser." };
+  }
+  if (digits.length !== 15) return { message: digits.length + "/15 chiffres. Affiche l'IMEI complet avec *#06#." };
+  if (imeiLastDigit(digits.slice(0, 14)) !== digits[14]) return { message: "L'IMEI a 15 chiffres mais le dernier semble incorrect. Vérifie avec *#06#." };
+  return { message: "IMEI complet : 15 chiffres, contrôle valide." };
+}
+
 function phonesFromText(text: string) {
   return text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).map((line) => {
-    const values = line.split(/[\s,;]+/).filter(Boolean);
+    const values = line.split(/[,;]+/).map((n) => n.replace(/[\s-]+/g, '')).filter(Boolean);
     if (values.length > 2) throw new Error('Un téléphone par ligne : IMEI 1 et IMEI 2 facultatif.');
-    if (values.some((n) => !/^\d{15}$/.test(n))) throw new Error('Les IMEI doivent contenir exactement 15 chiffres.');
+    if (values.some((n) => !/^\d{15}$/.test(n))) throw new Error("IMEI incomplet : saisis les 15 chiffres du téléphone (compose *#06#).");
     return { imei: values[0], ...(values[1] ? { imei2: values[1] } : {}) };
   });
 }
@@ -80,7 +107,7 @@ export default function Products() {
   }
 
   function openNew(kind: 'phone' | 'other') {
-    setForm({ ...fresh }); setError(''); setDialog({ type: 'new', kind });
+    setForm({ ...fresh, name: kind === 'phone' ? 'Téléphone' : '' }); setError(''); setDialog({ type: 'new', kind });
   }
   function openAction(type: 'stock' | 'imeis', product: Product) {
     setDelta(''); setReason(''); setImeis(''); setError('');
@@ -101,7 +128,9 @@ export default function Products() {
       if (dialog.type === 'new') {
         await apiPost('/api/products/', {
           name: form.name,
+          brand: dialog.kind === 'phone' ? form.brand : '',
           model: dialog.kind === 'phone' ? form.model : '',
+          condition: dialog.kind === 'phone' ? form.condition : 'new',
           category: dialog.kind,
           purchase_price: form.purchase_price,
           sale_price: form.sale_price,
@@ -153,7 +182,7 @@ export default function Products() {
             <thead><tr><th>Produit</th><th>Prix d'achat</th><th>Prix de vente</th><th>Stock</th><th>Action</th></tr></thead>
             <tbody>{products.map((item) => (
               <tr key={item.id}>
-                <td><span className="catalog-itemname">{item.name}</span>{item.model ? <span className="catalog-ref">Modèle : {item.model}</span> : null}</td>
+                <td><span className="catalog-itemname">{item.name}</span>{item.model ? <span className="catalog-ref">{[item.brand, item.model, item.condition === 'used' ? 'Occasion' : 'Neuf'].filter(Boolean).join(' · ')}</span> : null}</td>
                 <td className="catalog-number">{xof(item.purchase_price)}</td>
                 <td className="catalog-number">{xof(item.sale_price)}</td>
                 <td><span className={'catalog-stock ' + (item.low_stock ? 'low' : '')}>{item.quantity} unité(s)</span></td>
@@ -170,7 +199,7 @@ export default function Products() {
           <section className="catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
             <div className="catalog-modal-header">
               <div><h3 id="catalog-title">{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Ajouter un téléphone' : 'Ajouter un article') : dialog.type === 'imeis' ? 'Ajouter des téléphones' : 'Corriger le stock'}</h3>
-                <p>{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Nom et modèle sont deux informations différentes.' : 'Pochette, chargeur ou autre article : saisie rapide.') : dialog.product.name}</p>
+                <p>{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Nom, marque, modèle et état, sans référence ni catégorie.' : 'Pochette, chargeur ou autre article : saisie rapide.') : dialog.product.name}</p>
               </div>
               <button className="catalog-close" aria-label="Fermer" onClick={() => setDialog(null)}><X size={19}/></button>
             </div>
@@ -181,15 +210,30 @@ export default function Products() {
                     <label htmlFor="product-name">Nom du produit *</label>
                     <input id="product-name" autoFocus required maxLength={160} value={form.name}
                       onChange={(e) => update('name', e.target.value)}
-                      placeholder={dialog.kind === 'phone' ? 'Ex. Samsung' : 'Ex. Pochette Samsung A17'}/>
+                      placeholder={dialog.kind === 'phone' ? 'Ex. Téléphone' : 'Ex. Pochette Samsung A17'}/>
                   </div>
                   {dialog.kind === 'phone' && (
-                    <div className="catalog-field">
-                      <label htmlFor="product-model">Modèle *</label>
-                      <input id="product-model" required maxLength={70} value={form.model}
-                        onChange={(e) => update('model', e.target.value)} placeholder="Ex. Galaxy A17 128 Go"/>
-                      <small>Nom du produit : Samsung · Modèle : Galaxy A17. Pas besoin de les répéter.</small>
-                    </div>
+                    <>
+                      <div className="catalog-fields">
+                        <div className="catalog-field">
+                          <label htmlFor="product-brand">Marque *</label>
+                          <input id="product-brand" required maxLength={70} value={form.brand}
+                            onChange={(e) => update('brand', e.target.value)} placeholder="Samsung"/>
+                        </div>
+                        <div className="catalog-field">
+                          <label htmlFor="product-condition">État *</label>
+                          <select id="product-condition" value={form.condition} onChange={(e) => update('condition', e.target.value)}>
+                            <option value="new">Neuf</option><option value="used">Occasion</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="catalog-field">
+                        <label htmlFor="product-model">Modèle *</label>
+                        <input id="product-model" required maxLength={70} value={form.model}
+                          onChange={(e) => update('model', e.target.value)} placeholder="Galaxy A17 128 Go"/>
+                        <small>Exemple : Nom « Téléphone » · Marque « Samsung » · Modèle « Galaxy A17 ».</small>
+                      </div>
+                    </>
                   )}
                   <div className="catalog-fields">
                     <div className="catalog-field"><label htmlFor="product-cost">Prix d'achat (FCFA)</label><input id="product-cost" type="number" min="0" step=".01" required value={form.purchase_price} onChange={(e) => update('purchase_price', e.target.value)}/></div>
@@ -199,7 +243,11 @@ export default function Products() {
                     <div className="catalog-field">
                       <label htmlFor="product-imeis"><Barcode size={15} style={{ verticalAlign: 'middle' }}/> IMEI (facultatif maintenant)</label>
                       <textarea id="product-imeis" value={form.imeis} onChange={(e) => update('imeis', e.target.value)} placeholder="Un IMEI principal par ligne"/>
-                      <small>Scanner l'IMEI sur le téléphone ou son emballage. Il doit avoir 15 chiffres et une clé de contrôle valide. Tu peux créer le modèle puis ajouter l'IMEI ensuite.</small>
+                      <small>L'IMEI complet apparaît avec *#06# sur le téléphone. Il est possible de créer le modèle sans IMEI, mais le stock restera à zéro jusqu'à son ajout.</small>
+                      {imeiHint(form.imeis) && <div className="catalog-imei-guide">
+                        <span>{imeiHint(form.imeis)?.message}</span>
+                        {imeiHint(form.imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => update('imeis', imeiHint(form.imeis)!.suggested!)}>Compléter les 15 chiffres</button>}
+                      </div>}
                     </div>
                   ) : (
                     <div className="catalog-field"><label htmlFor="product-qty">Quantité initiale</label><input id="product-qty" type="number" min="0" max="1000000" step="1" value={form.quantity} onChange={(e) => update('quantity', e.target.value)}/></div>
@@ -209,7 +257,11 @@ export default function Products() {
                 <div className="catalog-field">
                   <label htmlFor="batch-imeis">IMEI des téléphones *</label>
                   <textarea id="batch-imeis" autoFocus required value={imeis} onChange={(e) => setImeis(e.target.value)} placeholder="Un IMEI par ligne"/>
-                  <small><Barcode size={13}/> Chaque téléphone doit avoir un IMEI valide et unique ; second IMEI facultatif séparé par virgule.</small>
+                  <small><Barcode size={13}/> Pour connaître l'IMEI complet, compose *#06#. Le second IMEI est facultatif et se sépare par une virgule.</small>
+                  {imeiHint(imeis) && <div className="catalog-imei-guide">
+                    <span>{imeiHint(imeis)?.message}</span>
+                    {imeiHint(imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => setImeis(imeiHint(imeis)!.suggested!)}>Compléter les 15 chiffres</button>}
+                  </div>
                 </div>
               ) : (
                 <>

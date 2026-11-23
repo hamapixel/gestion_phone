@@ -119,8 +119,6 @@ class PurchaseReceipt(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client_ref = models.UUIDField(unique=True)
     payload_hash = models.CharField(max_length=64)
-    origin = models.CharField(max_length=8, default="online", choices=[("online", "En ligne"), ("offline", "Synchronisée")])
-    device_ref = models.UUIDField(null=True, blank=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="purchases")
     total = models.DecimalField(max_digits=15, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

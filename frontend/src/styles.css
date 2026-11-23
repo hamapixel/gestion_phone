@@ -610,7 +610,7 @@ html, body, #root {
 
 @media print {
   html,body { width: auto !important; background: white !important; margin: 0 !important; padding: 0 !important; }
-  body > #root { display: none !important; }
+  body:has(> .invoice-overlay) > #root { display: none !important; }
   body > .invoice-overlay { display: block !important; position: static !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; background: white !important; }
   .invoice-dialog { display: block !important; background: white !important; border: 0 !important; width: auto !important; max-width: none !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0 !important; }
   .invoice-toolbar { display: none !important; }
@@ -644,4 +644,92 @@ html, body, #root {
   .debt-history-grid { grid-template-columns: minmax(0,1fr); }
   .debt-history-card { padding: 12px; }
   .debt-history-heading h3 { font-size: 14px; }
+}
+
+
+/* Phase 07 — analytics, dépenses et alertes. Always cards on mobile. */
+.phase7-page { width:100%; min-width:0; max-width:100%; display:grid; gap:15px; }
+.phase7-page *, .phase7-page *::before, .phase7-page *::after { min-width:0; box-sizing:border-box; }
+.phase7-section-heading { display:flex; align-items:start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.phase7-section-heading h3 { display:flex; align-items:center; gap:9px; font-size:18px; margin:0 0 6px; color:var(--ink); }
+.phase7-section-heading p { margin:0; font-size:12px; color:var(--muted); line-height:1.6; }
+.phase7-secondary { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:39px; padding:10px 12px; border-radius:10px; border:1px solid var(--border); color:var(--ink); background:var(--surface); font-size:11px; font-weight:750; }
+.phase7-secondary:disabled { opacity:.45; }
+.phase7-period { display:grid; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px; }
+.phase7-period-buttons { display:flex; flex-wrap:wrap; gap:7px; }
+.phase7-period-buttons button { flex:1 1 85px; border-radius:9px; border:1px solid var(--border); padding:10px 11px; background:var(--surface); color:var(--ink); font-size:11px; font-weight:750; white-space:normal; }
+.phase7-period-buttons button.selected { background:#eaf1ff; border-color:#8eacfb; color:#2358c5; }
+.phase7-custom-dates { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.phase7-custom-dates label { font-size:11px; font-weight:700; color:var(--muted); display:grid; gap:6px; }
+.phase7-custom-dates input { width:100%; max-width:100%; border:1px solid var(--border); padding:9px; min-height:39px; border-radius:9px; color:var(--ink); background:var(--surface); font:inherit; font-size:12px; }
+.phase7-period-caption { margin:0; font-size:11px; color:var(--muted); }
+.phase7-kpis { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; }
+.phase7-kpi { display:grid; gap:8px; align-content:start; min-height:120px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; }
+.phase7-kpi span { font-size:12px; font-weight:750; color:var(--muted); }
+.phase7-kpi strong { font-size:clamp(17px,1.65vw,24px); font-weight:850; letter-spacing:-.03em; color:var(--ink); overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.phase7-kpi small { font-size:10px; line-height:1.6; color:var(--muted); }
+.phase7-panel { display:grid; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:17px; }
+.phase7-panel h4 { display:flex; align-items:center; gap:8px; margin:0; font-size:14px; }
+.phase7-product-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.phase7-product-card { display:grid; gap:10px; border:1px solid var(--border); border-radius:11px; padding:13px; overflow-wrap:anywhere; }
+.phase7-product-card > strong { font-size:13px; }
+.phase7-product-card > div { display:flex; justify-content:space-between; gap:9px; align-items:center; font-size:11px; }
+.phase7-product-card span { color:var(--muted); }
+.phase7-product-card b { text-align:right; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.phase7-day-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.phase7-day { display:grid; gap:6px; border-radius:10px; border:1px solid var(--border); padding:11px; overflow-wrap:anywhere; }
+.phase7-day strong { font-size:11px; }.phase7-day span { font-size:12px; font-weight:750; }.phase7-day small { font-size:10px; color:var(--muted); }
+.phase7-empty,.phase7-disclaimer,.phase7-alert-caption { color:var(--muted); font-size:11px; line-height:1.7; margin:0; }
+.phase7-disclaimer { background:var(--bg); border-radius:10px; padding:12px; overflow-wrap:anywhere; }
+.phase7-expense-total { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:9px; background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:17px; }
+.phase7-expense-total span { font-size:12px; color:var(--muted); }
+.phase7-expense-total strong { font-size:20px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.phase7-expense-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.phase7-expense-card { display:grid; gap:9px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; overflow-wrap:anywhere; }
+.phase7-expense-card > div { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.phase7-expense-card strong { font-size:13px; }.phase7-expense-card small { color:var(--muted); font-size:11px; }
+.phase7-expense-card b { font-size:17px; font-variant-numeric:tabular-nums; }.phase7-expense-card p { font-size:11px; color:var(--muted); margin:0; }
+.phase7-empty-panel { display:flex; justify-content:center; align-items:center; gap:9px; padding:36px 14px; background:var(--surface); border:1px solid var(--border); border-radius:14px; color:var(--muted); font-size:12px; text-align:center; }
+.phase7-expense-modal { width:min(100%,510px); }
+.phase7-alert-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+.phase7-alert-card { display:grid; grid-template-columns:37px minmax(0,1fr); align-items:start; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px; overflow-wrap:anywhere; }
+.phase7-alert-card.warning { border-left:3px solid #e68c44; }
+.phase7-alert-icon { display:grid; place-items:center; width:35px; height:35px; border-radius:11px; color:var(--blue); background:var(--bg); }
+.phase7-alert-card strong { font-size:13px; }
+.phase7-alert-card p { margin:6px 0 0; font-size:11px; color:var(--muted); line-height:1.6; }
+.phase7-alert-card .phase7-secondary { grid-column:2; justify-self:start; }
+:root[data-theme="dark"] .phase7-period-buttons button.selected { background:#294571; color:#cce0ff; border-color:#6289cd; }
+@media(max-width:1050px) { .phase7-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:760px) {
+  .phase7-section-heading { display:grid; grid-template-columns:minmax(0,1fr); }
+  .phase7-section-heading .catalog-add,.phase7-section-heading .phase7-secondary { width:100%; justify-content:center; }
+  .phase7-period { padding:8px; }
+  .phase7-period-buttons { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .phase7-period-buttons button { flex:unset; min-height:38px; width:100%; padding:8px 6px; }
+  .phase7-kpis { gap:8px; }
+  .phase7-kpi { padding:12px; min-height:104px; }
+  .phase7-kpi strong { font-size:16px; }
+  .phase7-product-grid,.phase7-expense-grid,.phase7-alert-grid { grid-template-columns:minmax(0,1fr); }
+  .phase7-day-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .phase7-panel { padding:12px; }
+}
+@media(max-width:350px) {
+  .phase7-kpis { grid-template-columns:minmax(0,1fr); }
+  .phase7-custom-dates { grid-template-columns:minmax(0,1fr); }
+  .phase7-day-grid { grid-template-columns:minmax(0,1fr); }
+}
+@media print {
+  body:not(:has(> .invoice-overlay)) .sidebar,
+  body:not(:has(> .invoice-overlay)) .topbar,
+  body:not(:has(> .invoice-overlay)) .bottom-nav,
+  body:not(:has(> .invoice-overlay)) .page-title,
+  body:not(:has(> .invoice-overlay)) .content > footer,
+  body:not(:has(> .invoice-overlay)) .phase7-period,
+  body:not(:has(> .invoice-overlay)) .phase7-print { display:none !important; }
+  body:not(:has(> .invoice-overlay)) .content { margin:0 !important; padding:0 !important; }
+  body:not(:has(> .invoice-overlay)) .workspace { margin:0 !important; padding:0 !important; width:100% !important; max-width:none !important; }
+  .phase7-page { display:block; color:#111; }
+  .reports-page > * { margin-bottom:12px; }
+  .phase7-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .phase7-kpi,.phase7-product-card,.phase7-day { break-inside:avoid; page-break-inside:avoid; }
 }

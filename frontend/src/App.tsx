@@ -9,6 +9,7 @@ import type { LucideIcon } from 'lucide-react';
 import Products from './Products';
 import Purchases from './Purchases';
 import Checkout from './Checkout';
+import Debts from './Debts';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -30,7 +31,7 @@ const goals = [
   { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Accès sécurisé actif' },
   { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
   { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes actives' },
-  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Phases 06–07 · Suivi des paiements' },
+  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Suivi des créances actif · Factures Phase 06' },
 ];
 
 const preferredTheme = (): boolean => {
@@ -133,6 +134,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <Checkout />
           ) : page === 'purchases' ? (
             <Purchases />
+          ) : page === 'debts' ? (
+            <Debts />
           ) : page === 'dashboard' ? (
             <>
               <section className="hero">

@@ -67,3 +67,7 @@ Dans « Caisse », rechercher un article et cliquer Ajouter. Pour un téléphone
 Choisir **Tout**, **Moitié** ou **Autre montant**, puis le moyen de paiement. En cas de reste à payer, nom et téléphone du client sont obligatoires ; le remboursement ultérieur sera ajouté en Phase 07. Après validation, les mouvements de stock et le bénéfice brut sont enregistrés dans PostgreSQL et la vente apparaît dans l'historique. La facture personnalisée et l'impression sont prévues en Phase 06. La caisse nécessite actuellement une connexion au serveur (offline : phase ultérieure).
 
 La référence `client_ref` rend un nouvel envoi identique sûr contre les ventes en double. Si une coupure survient pendant l'enregistrement, utiliser « Réessayer la même vente » sans modifier le panier. Ne jamais arrêter Docker avec `down -v`.
+
+## Créances actives (complément Phase 05)
+
+Les ventes payées à moitié ou à crédit apparaissent dans « Créances » avec client, téléphone, échéance, total, encaissé et solde. Filtres En cours / En retard / Payées / Toutes, recherche, historique des versements. « Encaisser » permet Tout / Moitié / Autre montant, avec moyen de paiement, validation atomique et référence UUID anti-doublon. Les remboursements ne s'ajoutent **jamais** au chiffre d'affaires de la vente. L'option « Relancer WhatsApp » ouvre un message prérempli sans l'envoyer automatiquement.

@@ -5,8 +5,16 @@ import App from './App';
 describe('PhoneStock Pro - phase 01', () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true, json: async () => ({ status: 'ok' }),
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.startsWith('/api/products/')) return {
+        ok: true, json: async () => ({ results: [] }),
+      };
+      if (url === '/api/sales/') return {
+        ok: true, json: async () => ({
+          results: [], today: { total: '0', cash_collected: '0', balance: '0', gross_profit: '0' },
+        }),
+      };
+      return { ok: true, json: async () => ({ status: 'ok' }) };
     }));
   });
 
@@ -22,11 +30,12 @@ describe('PhoneStock Pro - phase 01', () => {
     expect(screen.getByText('Prochaines fonctionnalités')).toBeTruthy();
   });
 
-  it('affiche les modules non disponibles sans fausse vente', async () => {
+  it('ouvre la caisse active sans afficher un module fictif', async () => {
     render(<App/>);
     await screen.findByText('API connectée');
     fireEvent.click(screen.getAllByRole('button', { name: 'Caisse' })[0]);
-    expect(screen.getByText('MODULE EN PRÉPARATION')).toBeTruthy();
+    expect(await screen.findByText('Articles disponibles')).toBeTruthy();
+    expect(screen.queryByText('MODULE EN PRÉPARATION')).toBeNull();
   });
 
   it('n’affiche aucun module de gestion des utilisateurs', async () => {

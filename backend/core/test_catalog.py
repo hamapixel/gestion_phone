@@ -91,6 +91,15 @@ class CatalogTests(TestCase):
         self.assertEqual(self.create_phone([{"imei": first}, {"imei": first}]).status_code, 400)
         self.assertEqual(Product.objects.count(), 0)
 
+    def test_phone_requires_distinct_model_field(self):
+        response = self.post_json(reverse("products"), {
+            "name": "Samsung", "category": "phone",
+            "purchase_price": "85000", "sale_price": "95000",
+            "model": "", "quantity": 0,
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Product.objects.count(), 0)
+
     def test_add_phones_scanner_batch(self):
         response = self.create_phone()
         product_id = response.json()["product"]["id"]

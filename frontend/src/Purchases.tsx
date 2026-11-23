@@ -148,14 +148,14 @@ export default function Purchases() {
           {!products.length && <p className="catalog-empty">Ajoute d'abord un produit dans « Produits & stock ».</p>}
           <section className="catalog-card">
             {receipts.length ? (
-              <table className="catalog-table">
+              <table className="catalog-table catalog-table--purchases">
                 <thead><tr><th>Date</th><th>Fournisseur</th><th>Articles</th><th>Montant d'achat</th></tr></thead>
                 <tbody>{receipts.map((receipt) => (
                   <tr key={receipt.id}>
-                    <td>{new Date(receipt.created_at).toLocaleString('fr-FR')}</td>
-                    <td>{receipt.supplier.name}</td>
-                    <td>{receipt.lines.map((line) => line.product_name + ' × ' + line.quantity).join(', ')}</td>
-                    <td className="catalog-number">{formatXof(receipt.total)}</td>
+                    <td className="purchase-date-cell"><span className="catalog-mobile-label">Date</span>{new Date(receipt.created_at).toLocaleString('fr-FR')}</td>
+                    <td className="purchase-supplier-cell"><span className="catalog-mobile-label">Fournisseur</span><strong>{receipt.supplier.name}</strong></td>
+                    <td className="purchase-items-cell"><span className="catalog-mobile-label">Marchandises</span>{receipt.lines.map((line) => line.product_name + ' × ' + line.quantity).join(', ')}</td>
+                    <td className="catalog-number purchase-amount-cell"><span className="catalog-mobile-label">Total de l'achat</span><strong>{formatXof(receipt.total)}</strong></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -218,7 +218,7 @@ export default function Purchases() {
                         <textarea id={'p-imeis-' + line.uid} required value={line.imeis}
                           onChange={(event) => updateLine(line.uid, { imeis: event.target.value })}
                           placeholder="Un téléphone par ligne : IMEI principal, second facultatif"/>
-                        <small>Chaque téléphone doit avoir son IMEI réel (15 chiffres, *#06#). Le nombre de lignes doit égaler la quantité.</small>
+                        <small>Pour un téléphone neuf éteint, scanne le code-barres « IMEI 1 » de la boîte ou recopie les 15 chiffres imprimés. Pas besoin d'allumer le téléphone. Un IMEI réel par unité ; si le téléphone est allumé, *#06# reste possible.</small>
                       </div>
                     )}
                   </div>

@@ -25,6 +25,25 @@ describe('PhoneStock achats fournisseurs', () => {
     expect(await screen.findByText(/Aucun achat fournisseur enregistré/)).toBeTruthy();
   });
 
+  it('utilise une liste adaptée aux cartes mobiles pour les réceptions', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url === '/api/products/') return { ok: true, json: async () => ({ results: [
+        { id: 'case-id', name: 'Pochette', brand: '', model: '', category: 'other', purchase_price: '1000', quantity: 10 },
+      ] }) };
+      if (url === '/api/suppliers/') return { ok: true, json: async () => ({ results: [] }) };
+      if (url === '/api/purchases/') return { ok: true, json: async () => ({ results: [{
+        id: 'receipt1', created_at: '2026-11-23T10:00:00Z',
+        supplier: { name: 'Fournisseur Central' }, total: '12000',
+        lines: [{ product_name: 'Pochette', quantity: 12 }],
+      }] }) };
+      throw new Error('URL inattendue');
+    }));
+    render(<Purchases/>);
+    expect(await screen.findByText('Fournisseur Central')).toBeTruthy();
+    expect(document.querySelector('.catalog-table--purchases')).not.toBeNull();
+    expect(document.querySelectorAll('.catalog-table--purchases .catalog-mobile-label').length).toBe(4);
+  });
+
   it('enregistre un achat avec fournisseur et quantité en utilisant CSRF', async () => {
     render(<Purchases/>);
     await screen.findByText(/Aucun achat fournisseur enregistré/);

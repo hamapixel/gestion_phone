@@ -295,3 +295,65 @@ footer { text-align: center; padding: 12px 15px 25px; color: var(--muted); font-
   }
   .catalog-table--purchases .purchase-items-cell { line-height: 1.6; }
 }
+
+/* Responsive invariant: mobile cards, no clipped or horizontally overflowing content. */
+html, body, #root {
+  max-width: 100%;
+  min-width: 0;
+}
+.shell, .content, .workspace, .catalog-page, .purchase-page {
+  min-width: 0;
+  max-width: 100%;
+}
+.catalog-page, .purchase-page, .catalog-toolbar, .catalog-summary,
+.catalog-modal, .catalog-form, .purchase-line, .catalog-details,
+.catalog-detail-section {
+  min-width: 0;
+}
+.catalog-modal, .catalog-card, .catalog-detail-section,
+.catalog-history-row, .catalog-imei-row, .purchase-line {
+  overflow-wrap: anywhere;
+}
+.catalog-field, .catalog-field input, .catalog-field select, .catalog-field textarea,
+.catalog-toolbar input, .catalog-modal, .catalog-primary, .catalog-cancel {
+  max-width: 100%;
+}
+.catalog-table--products .catalog-row-actions button { min-width: 0; }
+
+@media (max-width: 760px) {
+  .workspace { width: 100%; max-width: 100%; min-width: 0; }
+  .top-left { min-width: 0; flex: 1 1 auto; }
+  .top-left > div { min-width: 0; }
+  .top-left h1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .top-actions { flex: 0 0 auto; }
+  .catalog-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; }
+  .catalog-search { min-width: 0; max-width: 100%; }
+  .catalog-toolbar .catalog-add,
+  .catalog-toolbar .catalog-add-other { width: 100%; min-width: 0; }
+  .catalog-summary { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .catalog-summary span { min-width: 0; overflow-wrap: anywhere; }
+  .catalog-table--products, .catalog-table--purchases { max-width: 100%; }
+  .catalog-table--products tbody, .catalog-table--purchases tbody { min-width: 0; }
+  .catalog-table--products tr, .catalog-table--purchases tr {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .catalog-row-actions { max-width: 100%; }
+  .catalog-modal { width: min(100%, 540px); max-width: 100%; overflow-x: hidden; }
+  .purchase-modal { width: min(100%, 660px); }
+  .catalog-fields { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  .purchase-total strong { min-width: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .catalog-table--products tr {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "product" "cost" "price" "stock" "actions";
+  }
+  .catalog-table--products td:nth-child(3) { padding-top: 3px; }
+  .topbar { padding-inline: 8px; gap: 6px; }
+  .top-actions { gap: 4px; }
+  .catalog-table--products .catalog-row-actions .catalog-action {
+    flex: 1 1 100%;
+  }
+}

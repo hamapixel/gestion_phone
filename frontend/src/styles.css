@@ -518,3 +518,130 @@ html, body, #root {
   .debt-payment-line { flex-wrap: wrap; }
 }
 @media(max-width:340px) { .debt-values { grid-template-columns: minmax(0,1fr); } }
+
+
+/* Phase 06 — en-tête premium et documents imprimables, zéro débordement mobile */
+.shop-settings { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(270px,.8fr); gap: 15px; align-items: start; width: 100%; min-width: 0; }
+.shop-settings > * { min-width: 0; }
+.shop-form-card,.shop-preview-card { background: var(--surface); padding: 21px; border: 1px solid var(--border); border-radius: 15px; min-width: 0; }
+.shop-heading { display: flex; gap: 10px; align-items: start; margin-bottom: 18px; color: var(--blue); }
+.shop-heading h3 { color: var(--ink); margin: 0 0 5px; font-size: 16px; }.shop-heading p { font-size: 11px; margin: 0; color: var(--muted); line-height: 1.7; }
+.shop-save { width: 100%; gap: 8px; }
+.shop-logo-controls { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; }
+.shop-logo-controls button { display: flex; gap: 7px; align-items: center; }
+.shop-file-label { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 10px 13px; font-size: 11px; font-weight: 700; }
+.shop-file-label input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.shop-saved { padding: 10px; border-radius: 10px; background: #e0f8eb; color: #17663e; font-size: 12px; }
+.shop-letterhead-preview { background: #fff; color: #18233b; border: 1px solid #e6eaf1; border-radius: 11px; padding: 24px; text-align: center; display: grid; gap: 7px; overflow-wrap: anywhere; }
+.shop-letterhead-preview img { width: 66px; height: 66px; object-fit: contain; margin-inline: auto; }
+.shop-letterhead-preview h3 { font-size: 21px; margin: 0 0 5px; }.shop-letterhead-preview p { font-size: 11px; margin: 0; color: #4c596d; }
+.shop-letterhead-preview small { color: #516078; font-size: 10px; }
+.shop-preview-separator { border-top: 2px solid #225ce6; margin-block: 13px; }
+
+.invoice-overlay { position: fixed; inset: 0; z-index: 110; background: rgba(5,14,35,.72); display: grid; place-items: center; padding: 18px; overflow-y: auto; overflow-x: hidden; }
+.invoice-dialog { display: grid; gap: 0; min-width: 0; width: min(100%,850px); max-height: calc(100dvh - 36px); border-radius: 17px; overflow-y: auto; overflow-x: hidden; background: #e9edf4; border: 1px solid #e6eaf1; box-shadow: 0 32px 100px rgba(0,0,0,.30); }
+.invoice-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 11px; position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: 1px solid var(--border); padding: 13px 16px; color: var(--ink); }
+.invoice-toolbar h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 0 0 3px; }
+.invoice-toolbar p { margin: 0; font-size: 10px; color: var(--muted); }
+.invoice-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.invoice-size-switch { display: flex; flex-wrap: wrap; gap: 4px; }
+.invoice-size-switch button { border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); min-height: 35px; padding: 7px 10px; font-size: 11px; font-weight: 700; }
+.invoice-size-switch button.selected { background: #e7efff; color: #235bcc; border-color: #93b4fc; }
+.invoice-print-btn { border: 0; display: inline-flex; align-items: center; gap: 7px; border-radius: 9px; background: #2563eb; color: white; min-height: 37px; padding: 8px 12px; font-size: 11px; font-weight: 800; }
+.invoice-print-btn:disabled { opacity: .5; }
+.invoice-paper { margin: 22px auto 28px; background: white; color: #132039; padding: 20mm 17mm; width: 210mm; max-width: calc(100% - 24px); min-width: 0; box-shadow: 0 8px 24px rgba(7,28,67,.13); box-sizing: border-box; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; overflow-wrap: anywhere; }
+.invoice-paper--a5 { width: 148mm; padding: 12mm; }
+.invoice-paper--ticket { width: 80mm; padding: 4mm; }
+.invoice-heading { border-bottom: 2px solid #244bd7; padding-bottom: 16px; margin-bottom: 17px; }
+.invoice-shop { display: flex; align-items: center; gap: 13px; }
+.invoice-shop img { max-width: 65px; max-height: 65px; width: auto; height: auto; object-fit: contain; flex-shrink: 0; }
+.invoice-shop h3 { margin: 0 0 5px; font-size: 21px; color: #13243d; }
+.invoice-shop p { font-size: 11px; color: #4a556b; margin: 3px 0; }
+.invoice-title { display: grid; gap: 5px; margin-bottom: 19px; }
+.invoice-title strong { font-size: 17px; color: #17223a; }.invoice-title span { font-size: 12px; font-weight: 750; }.invoice-title small { font-size: 11px; color: #637185; }
+.invoice-customer { padding: 13px; border: 1px solid #e4e8ef; background: #f7f9fc; border-radius: 9px; margin-bottom: 18px; }
+.invoice-customer strong { font-size: 11px; }.invoice-customer p { margin: 5px 0 0; font-size: 11px; }
+.invoice-table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+.invoice-table th { text-align: left; color: #617089; background: #f1f4fa; padding: 9px 6px; }
+.invoice-table td { padding: 10px 6px; vertical-align: top; border-bottom: 1px solid #e6eaf1; overflow-wrap: anywhere; }
+.invoice-table th:first-child,.invoice-table td:first-child { width: 45%; }
+.invoice-table td small { display: block; color: #57647c; font-size: 10px; margin-top: 5px; overflow-wrap: anywhere; }
+.invoice-totals { display: grid; gap: 8px; margin-top: 19px; margin-left: auto; width: min(100%,265px); }
+.invoice-totals>div,.invoice-receipt-details>div { display: flex; justify-content: space-between; align-items: center; gap: 9px; font-size: 11px; overflow-wrap: anywhere; }
+.invoice-totals span,.invoice-receipt-details span { color: #546178; }
+.invoice-totals strong,.invoice-receipt-details strong { text-align: right; }
+.invoice-totals .invoice-balance { border-top: 1px solid #d9e1ec; padding-top: 9px; }
+.invoice-totals>small { text-align: right; color: #5e6b80; }
+.invoice-receipt-details { display: grid; gap: 15px; margin: 18px 0; padding: 15px; border: 1px solid #e5eaf2; border-radius: 9px; }
+.invoice-receipt-details>div:nth-child(2) strong { color: #185e37; font-size: 16px; }
+.invoice-footer { margin-top: 28px; padding-top: 13px; border-top: 1px solid #dfe5ec; text-align: center; font-size: 11px; color: #68758c; }
+.invoice-paper--ticket .invoice-shop { display: grid; justify-items: center; text-align: center; }
+.invoice-paper--ticket .invoice-shop h3 { font-size: 15px; }
+.invoice-paper--ticket .invoice-shop img { max-width: 46px; max-height: 46px; }
+.invoice-paper--ticket .invoice-title strong { font-size: 14px; }
+.invoice-paper--ticket .invoice-table { font-size: 9px; }
+.invoice-paper--ticket .invoice-table th,.invoice-paper--ticket .invoice-table td { padding: 7px 2px; }
+.invoice-paper--ticket .invoice-table td small { font-size: 8px; }
+.invoice-paper--ticket .invoice-totals>div { font-size: 10px; }
+.pos-invoice-button,.debt-document { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; }
+.debt-document { margin-left: auto; flex: 0 0 auto; }
+
+@media(max-width: 950px) { .shop-settings { grid-template-columns: minmax(0,1fr); } }
+@media(max-width: 760px) {
+  .shop-form-card,.shop-preview-card { padding: 15px; }
+  .invoice-overlay { padding: 8px; align-items: start; }
+  .invoice-dialog { max-height: calc(100dvh - 16px); width: 100%; }
+  .invoice-toolbar { position: relative; padding: 11px; }
+  .invoice-toolbar-actions { width: 100%; justify-content: space-between; }
+  .invoice-size-switch { flex: 1; }
+  .invoice-size-switch button { padding: 7px 6px; }
+  .invoice-paper { margin: 10px auto; padding: 12px; width: min(100% - 12px, 550px); }
+  .invoice-paper--ticket { width: min(100% - 12px, 80mm); }
+  .invoice-shop h3 { font-size: 16px; }
+  .invoice-shop img { max-width: 42px; max-height: 42px; }
+  .invoice-table { font-size: 10px; }
+  .invoice-table th,.invoice-table td { padding-inline: 3px; }
+  .invoice-title strong { font-size: 14px; }
+}
+
+@page ps-a4 { size: A4 portrait; margin: 12mm; }
+@page ps-a5 { size: A5 portrait; margin: 9mm; }
+@page ps-ticket { size: 80mm 210mm; margin: 3mm; }
+
+@media print {
+  html,body { width: auto !important; background: white !important; margin: 0 !important; padding: 0 !important; }
+  body > #root { display: none !important; }
+  body > .invoice-overlay { display: block !important; position: static !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; background: white !important; }
+  .invoice-dialog { display: block !important; background: white !important; border: 0 !important; width: auto !important; max-width: none !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0 !important; }
+  .invoice-toolbar { display: none !important; }
+  .invoice-paper { display: block !important; margin: 0 !important; padding: 0 !important; max-width: none !important; width: auto !important; box-shadow: none !important; background: white !important; overflow: visible !important; }
+  .invoice-paper--a4 { page: ps-a4; }
+  .invoice-paper--a5 { page: ps-a5; }
+  .invoice-paper--ticket { page: ps-ticket; }
+  .invoice-shop,.invoice-table tr,.invoice-totals>div,.invoice-receipt-details>div { break-inside: avoid; page-break-inside: avoid; }
+  .invoice-table { table-layout: fixed; }
+  .invoice-heading,.invoice-customer,.invoice-totals { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+
+/* Liste permanente des paiements de créances — cartes PC et mobile. */
+.debt-payment-history { margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--border); display: grid; gap: 14px; min-width: 0; }
+.debt-history-heading { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px; }
+.debt-history-heading h3 { margin: 0 0 5px; font-size: 16px; color: var(--ink); }
+.debt-history-heading p, .debt-history-heading>span { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.debt-history-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.debt-history-card { display: grid; gap: 11px; background: var(--surface); border: 1px solid var(--border); padding: 14px; border-radius: 13px; min-width: 0; overflow-wrap: anywhere; }
+.debt-history-client { display: grid; gap: 5px; }
+.debt-history-client strong { font-size: 13px; color: var(--ink); }
+.debt-history-client small { font-size: 11px; color: var(--muted); }
+.debt-history-details { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 11px; color: var(--muted); }
+.debt-history-kind { background: var(--bg); padding: 5px 8px; border-radius: 8px; color: var(--ink); font-weight: 650; }
+.debt-history-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+.debt-history-bottom strong { font-size: 16px; color: var(--ink); overflow-wrap: anywhere; }
+.debt-history-bottom .debt-document { flex: 0 0 auto; min-height: 38px; }
+.debt-history-empty { padding: 22px 14px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 12px; font-size: 12px; text-align: center; }
+@media (max-width: 760px) {
+  .debt-history-grid { grid-template-columns: minmax(0,1fr); }
+  .debt-history-card { padding: 12px; }
+  .debt-history-heading h3 { font-size: 14px; }
+}

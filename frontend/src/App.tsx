@@ -10,6 +10,7 @@ import Products from './Products';
 import Purchases from './Purchases';
 import Checkout from './Checkout';
 import Debts from './Debts';
+import ShopSettings from './ShopSettings';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -31,7 +32,7 @@ const goals = [
   { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Accès sécurisé actif' },
   { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
   { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes actives' },
-  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Suivi des créances actif · Factures Phase 06' },
+  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Créances et factures personnalisées actives' },
 ];
 
 const preferredTheme = (): boolean => {
@@ -96,7 +97,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         <div className="sidebar-bottom">
           <div className="menu-divider"/>
           <button className="collapse-control" onClick={() => setCollapsed((value) => !value)}><Menu size={19}/><span>Réduire le menu</span></button>
-          <p>PhoneStock Pro · Phase 01</p>
+          <p>PhoneStock Pro · Phase 06</p>
         </div>
       </aside>
       <div className="content">
@@ -122,7 +123,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 05 · CAISSE INTELLIGENTE</span>
+            <div><span className="tag">PHASE 06 · FACTURES ET REÇUS</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
@@ -136,6 +137,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <Purchases />
           ) : page === 'debts' ? (
             <Debts />
+          ) : page === 'settings' ? (
+            <ShopSettings />
           ) : page === 'dashboard' ? (
             <>
               <section className="hero">
@@ -165,7 +168,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 05 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 06 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

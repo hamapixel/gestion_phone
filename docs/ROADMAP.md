@@ -5,7 +5,7 @@
 - **Phase 03** : catalogue téléphones, IMEI individuels, pochettes, produits divers, stock initial et corrections tracées (achats fournisseurs en Phase 04).
 - **Phase 04** : achats fournisseurs multi-lignes, prix d'achat par ligne, réception du stock idempotente et journal des achats.
 - **Phase 05** : caisse rapide et panier intelligent, IMEI obligatoires pour téléphones, paiements complets ou partiels, clients identifiés pour crédit, historique et vente atomique/idempotente.
-- **Phase 06** : factures avec en-tête personnalisable et reçus A4/A5/80 mm/PDF.
+- **Phase 06** : en-tête personnalisable versionné (nom, logo, coordonnées, NIF), factures de vente et reçus de versement imprimables A4/A5/80 mm, enregistrement PDF via impression navigateur.
 - **Phase 05 (complément)** : liste réelle des créances et encaissements partiels idempotents ; sans doubler le chiffre d'affaires.
 - **Phase 07** : relances WhatsApp, dépenses, rapports et notifications.
 - **Phase 08** : SQLite locale, synchronisation idempotente et gestion des conflits hors ligne.

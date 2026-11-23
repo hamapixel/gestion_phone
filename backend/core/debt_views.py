@@ -82,6 +82,39 @@ def debts(request):
     })
 
 
+
+@require_GET
+@owner_only
+def debt_payments(request):
+    """Recent payments on credit sales, even after those debts were fully settled."""
+    query = request.GET.get("q", "").strip()[:100]
+    repayments = SalePayment.objects.filter(sale_id=OuterRef("pk"), client_ref__isnull=False)
+    debt_sales = Sale.objects.filter(
+        customer_name__gt="", customer_phone__gt=""
+    ).annotate(has_repayment=Exists(repayments)).filter(
+        Q(balance__gt=0) | Q(has_repayment=True)
+    )
+    if query:
+        debt_sales = debt_sales.filter(
+            Q(customer_name__icontains=query) | Q(customer_phone__icontains=query)
+        )
+    payments = SalePayment.objects.filter(
+        sale__in=debt_sales
+    ).select_related("sale").order_by("-created_at", "-id")[:100]
+    results = []
+    for item in payments:
+        sale = item.sale
+        results.append({
+            **payment_data(item),
+            "sale_id": str(sale.pk),
+            "reference": "VTE-" + sale.pk.hex[:10].upper(),
+            "customer_name": sale.customer_name,
+            "customer_phone": sale.customer_phone,
+            "kind": "repayment" if item.client_ref else "initial",
+        })
+    return JsonResponse({"results": results, "limit": 100})
+
+
 @require_POST
 @owner_only
 def collect_debt(request, sale_id):

@@ -52,7 +52,7 @@ def owner_login(request):
         is_active=True,
         is_superuser=True,
     ).first()
-    account = authenticate(request, username=user.username, password=password) if user else None
+    account = authenticate(request, username=user.username if user else identifier, password=password)
     if account is None or not is_owner(account):
         failed(keys)
         return JsonResponse({"detail": "Identifiant ou mot de passe incorrect."}, status=401)

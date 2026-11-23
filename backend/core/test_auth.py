@@ -39,6 +39,26 @@ class OwnerAuthenticationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_csrf_accepts_development_frontend_origin(self):
+        browser = Client(enforce_csrf_checks=True)
+        response = browser.get(reverse("auth-csrf"))
+        token = response.cookies["csrftoken"].value
+        response = browser.post(
+            reverse("auth-login"), self.payload(),
+            content_type="application/json",
+            HTTP_ORIGIN="http://localhost:5178",
+            HTTP_X_CSRFTOKEN=token,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_unknown_user_gets_generic_error(self):
+        response = self.client.post(
+            reverse("auth-login"),
+            self.payload(identifier="inconnu@example.com"),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+
     def test_non_owner_is_rejected(self):
         response = self.client.post(
             reverse("auth-login"),

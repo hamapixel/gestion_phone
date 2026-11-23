@@ -1,10 +1,8 @@
-from django.contrib import admin
 from django.urls import path
 from core.views import health, meta
 from core.auth_views import csrf_token, owner_session, owner_login, owner_logout
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
     path("api/health/", health, name="health"),
     path("api/meta/", meta, name="meta"),
     path("api/auth/csrf/", csrf_token, name="auth-csrf"),

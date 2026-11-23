@@ -2,12 +2,12 @@
 
 Socle technique de l'application de gestion de téléphones, pochettes et produits divers. **Chaque logiciel est réservé au propriétaire de la boutique : un seul compte, sans rôles gérant/vendeur.** Le propriétaire pourra utiliser le même compte sur son PC et son téléphone (synchronisation prévue dans une phase ultérieure).
 
-## Démarrage Windows (Phase 03 : catalogue et stock)
+## Démarrage Windows (Phase 04 : achats fournisseurs)
 
 ~~~powershell
 git clone https://github.com/hamapixel/gestion_phone.git
 cd gestion_phone
-git switch feature/phase-03-catalog-stock-imei
+git switch feature/phase-04-purchases-suppliers
 Copy-Item .env.example .env
 docker compose up --build -d
 docker compose ps
@@ -44,3 +44,7 @@ La Phase 02 est **en ligne uniquement** : l'authentification hors ligne sera ét
 Les ventes, créances, synchronisation hors ligne et installateurs Windows/Android ne sont pas encore développés. Ne pas exposer l'environnement de développement sur Internet.
 
 Voir [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Phase 04 : achats fournisseurs
+
+Dans « Achats & fournisseurs », clique sur « Nouvel achat », saisis le fournisseur, ajoute des produits et les quantités achetées. Les téléphones exigent un IMEI réel par unité. Valider la réception augmente le stock et conserve les coûts des lignes et l'historique. Une référence unique protège contre les doubles validations en cas de réessai réseau.

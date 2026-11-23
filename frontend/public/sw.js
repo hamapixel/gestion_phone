@@ -1,8 +1,21 @@
 /* PhoneStock Pro: offline application shell. Never cache API responses or cookies. */
-const CACHE = 'phonestock-shell-v1';
+const CACHE = 'phonestock-shell-v2';
 const BOOT = ['/', '/index.html', '/manifest.webmanifest'];
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(BOOT)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await cache.addAll(BOOT);
+    // Precache Vite's production JS/CSS identified in the generated index.html.
+    // Without this, the app would show offline HTML but could not launch its UI
+    // until a *second* online reload had cached its scripts.
+    const shell = await cache.match('/index.html');
+    if (shell) {
+      const html = await shell.text();
+      const assets = [...html.matchAll(/(?:src|href)="(\/(?:assets\/[^"]+|src\/main\.tsx))"/g)]
+        .map((match) => match[1]);
+      await Promise.all(assets.map((asset) => cache.add(asset).catch(() => {})));
+    }
+  })());
   self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {

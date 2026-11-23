@@ -205,6 +205,7 @@ class SalePayment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sale = models.ForeignKey(Sale, on_delete=models.PROTECT, related_name="payments")
+    client_ref = models.UUIDField(unique=True, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     method = models.CharField(max_length=10, choices=Sale.PaymentMethod.choices)
     created_at = models.DateTimeField(auto_now_add=True)

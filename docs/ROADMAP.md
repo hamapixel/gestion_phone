@@ -6,7 +6,8 @@
 - **Phase 04** : achats fournisseurs multi-lignes, prix d'achat par ligne, réception du stock idempotente et journal des achats.
 - **Phase 05** : caisse rapide et panier intelligent, IMEI obligatoires pour téléphones, paiements complets ou partiels, clients identifiés pour crédit, historique et vente atomique/idempotente.
 - **Phase 06** : factures avec en-tête personnalisable et reçus A4/A5/80 mm/PDF.
-- **Phase 07** : créances, versements, WhatsApp, dépenses, rapports et notifications.
+- **Phase 05 (complément)** : liste réelle des créances et encaissements partiels idempotents ; sans doubler le chiffre d'affaires.
+- **Phase 07** : relances WhatsApp, dépenses, rapports et notifications.
 - **Phase 08** : SQLite locale, synchronisation idempotente et gestion des conflits hors ligne.
 - **Phase 09** : Tauri Windows, Capacitor Android, activation sécurisée, distribution et sauvegarde.
 

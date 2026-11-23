@@ -156,6 +156,8 @@ class Sale(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     client_ref = models.UUIDField(unique=True)
     payload_hash = models.CharField(max_length=64)
+    origin = models.CharField(max_length=8, default="online", choices=[("online", "En ligne"), ("offline", "Synchronisée")])
+    device_ref = models.UUIDField(null=True, blank=True)
     owner = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="store_sales")
     branding = models.ForeignKey("ShopBranding", on_delete=models.PROTECT, related_name="sales")
     customer_name = models.CharField(max_length=160, blank=True)

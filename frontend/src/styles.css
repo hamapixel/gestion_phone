@@ -125,3 +125,7 @@ footer { text-align: center; padding: 12px 15px 25px; color: var(--muted); font-
 :root[data-theme="dark"] .catalog-stock.low { background: #514019; color: #ffdb93; }
 :root[data-theme="dark"] .catalog-error { background: #49242a; border-color: #703b40; color: #ffb8b8; }
 @media (max-width:760px) { .catalog-add { width: 100%; } .catalog-category { flex: 1; } .catalog-fields { grid-template-columns: 1fr; } .catalog-modal { padding: 18px; } .catalog-backdrop { padding: 10px; } }
+
+/* Actions de saisie rapide : téléphone avec IMEI ou article sans IMEI. */
+.catalog-add-other { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 43px; padding: 0 14px; font-size: 12px; }
+@media (max-width: 760px) { .catalog-add-other { width: 100%; } }

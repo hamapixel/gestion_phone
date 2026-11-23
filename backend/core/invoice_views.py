@@ -1,4 +1,4 @@
-"""Owner-only shop invoice headings and immutable invoice/payment receipt data."""
+"""Owner-only documents. Every printed invoice/receipt uses the currently configured shop header."""
 import base64
 import binascii
 import json
@@ -113,17 +113,23 @@ def public_sale_data(sale):
 @owner_only
 def invoice(request, sale_id):
     try:
-        sale = Sale.objects.select_related("branding").get(pk=sale_id)
+        sale = Sale.objects.get(pk=sale_id)
     except Sale.DoesNotExist:
         return JsonResponse({"detail": "Vente introuvable."}, status=404)
-    return JsonResponse({"kind": "invoice", "shop": branding_data(sale.branding), "sale": public_sale_data(sale)})
+    return JsonResponse({
+        "kind": "invoice",
+        # The header is an installation-wide setting, not tied to the sale date.
+        # Historic totals, sold products, and payment dates still come from the sale.
+        "shop": branding_data(current_branding()),
+        "sale": public_sale_data(sale),
+    })
 
 
 @require_GET
 @owner_only
 def payment_receipt(request, payment_id):
     try:
-        payment = SalePayment.objects.select_related("sale__branding").get(pk=payment_id)
+        payment = SalePayment.objects.select_related("sale").get(pk=payment_id)
     except SalePayment.DoesNotExist:
         return JsonResponse({"detail": "Versement introuvable."}, status=404)
     sale = payment.sale
@@ -133,7 +139,7 @@ def payment_receipt(request, payment_id):
     ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
     return JsonResponse({
         "kind": "payment",
-        "shop": branding_data(sale.branding),
+        "shop": branding_data(current_branding()),
         "payment": {
             "id": str(payment.id),
             "reference": "REC-" + payment.id.hex[:10].upper(),

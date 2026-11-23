@@ -74,7 +74,7 @@ Les ventes payées à moitié ou à crédit apparaissent dans « Créances » av
 
 ## Phase 06 — En-tête personnalisable, factures, reçus
 
-Dans **Paramètres**, configurer le nom de la boutique, téléphone, adresse, email, NIF/RCCM, message de pied de page et logo PNG/JPG/WebP (90 Ko maximum). Chaque modification crée une **version immuable** de l'en-tête. Les ventes gardent la version active au moment de la vente. Les ventes existantes avant cette mise à jour reçoivent une seule fois l'en-tête initial par défaut lors de la migration.
+Dans **Paramètres**, configurer le nom de la boutique, téléphone, adresse, email, NIF/RCCM, message de pied de page et logo PNG/JPG/WebP (90 Ko maximum). Chaque modification conserve une version de l'en-tête en base à des fins d'historique, mais **toutes les factures de vente et tous les reçus (anciens ou nouveaux) affichent l'en-tête actuellement enregistré dans Paramètres** lors de leur prochaine consultation/impression. Les montants, les dates et les lignes historiques de vente ne changent pas. Les PDF déjà téléchargés ne sont pas modifiés.
 
 Depuis **Caisse > Dernières ventes** ou après une vente, cliquer **Facture** ; depuis **Créances**, cliquer **Facture** ou **Reçu** sur un versement. L'aperçu contient les lignes, montants, IMEI des téléphones, paiement et solde sans exposer le coût d'achat ni la marge. Choisir **A4, A5 ou Ticket 80 mm**, puis utiliser « Imprimer / Enregistrer en PDF » : la fonction PDF repose sur le dialogue d'impression du navigateur, pas sur un export PDF serveur.
 

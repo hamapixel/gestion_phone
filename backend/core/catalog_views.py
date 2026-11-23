@@ -158,7 +158,7 @@ def products(request):
             raise ValueError("Catégorie invalide.")
         sku = clean_text(data.get("sku", ""), "Référence", 60)
         brand = clean_text(data.get("brand", ""), "Marque", 70)
-        model = clean_text(data.get("model", ""), "Modèle", 70)
+        model = clean_text(data.get("model", ""), "Modèle", 70, required=category == Product.Category.PHONE)
         purchase_price = amount(data.get("purchase_price"), "Prix d'achat", allow_zero=True)
         sale_price = amount(data.get("sale_price"), "Prix de vente")
         threshold = number(data.get("low_stock_threshold", 3), "Seuil d'alerte", 1000)

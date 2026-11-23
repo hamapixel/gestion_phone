@@ -3,7 +3,7 @@
 - **Phase 01** : socle Docker + Django + PostgreSQL + React, interface premium responsive, état API et tests.
 - **Phase 02** : compte unique du propriétaire, login compact et sécurisé, session Django, CSRF, protection contre les tentatives de connexion ; création et réinitialisation par commande locale.
 - **Phase 03** : catalogue téléphones, IMEI individuels, pochettes, produits divers, stock initial et corrections tracées (achats fournisseurs en Phase 04).
-- **Phase 04** : achats fournisseurs multi-lignes et réception du stock.
+- **Phase 04** : achats fournisseurs multi-lignes, prix d'achat par ligne, réception du stock idempotente et journal des achats.
 - **Phase 05** : caisse rapide et panier intelligent, paiements complets ou partiels.
 - **Phase 06** : factures avec en-tête personnalisable et reçus A4/A5/80 mm/PDF.
 - **Phase 07** : créances, versements, WhatsApp, dépenses, rapports et notifications.

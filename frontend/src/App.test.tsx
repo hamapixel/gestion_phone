@@ -27,7 +27,7 @@ describe('PhoneStock Pro - phase 01', () => {
     render(<App/>);
     await screen.findByText('API connectée');
     expect(screen.getByText('Bienvenue dans PhoneStock Pro')).toBeTruthy();
-    expect(screen.getByText('Prochaines fonctionnalités')).toBeTruthy();
+    expect(screen.getByText('Fonctionnalités disponibles')).toBeTruthy();
   });
 
   it('ouvre la caisse active sans afficher un module fictif', async () => {

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Barcode, Boxes, Plus, Search, X } from 'lucide-react';
+import { Barcode, Boxes, Plus, Search, Smartphone, X } from 'lucide-react';
 
 type Category = 'phone' | 'case' | 'other';
 type Product = {
@@ -8,20 +8,15 @@ type Product = {
   low_stock_threshold: number; low_stock: boolean;
 };
 type Dialog =
-  | { type: 'new' }
+  | { type: 'new'; kind: 'phone' | 'other' }
   | { type: 'imeis'; product: Product }
   | { type: 'stock'; product: Product };
 type NewForm = {
-  name: string; category: Category; sku: string; brand: string; model: string;
-  purchase_price: string; sale_price: string; quantity: string;
-  low_stock_threshold: string; imeis: string;
+  name: string; model: string; purchase_price: string; sale_price: string; quantity: string; imeis: string;
 };
 const fresh: NewForm = {
-  name: '', category: 'case', sku: '', brand: '', model: '',
-  purchase_price: '', sale_price: '', quantity: '0',
-  low_stock_threshold: '3', imeis: '',
+  name: '', model: '', purchase_price: '', sale_price: '', quantity: '0', imeis: '',
 };
-const labels: Record<Category, string> = { phone: 'Téléphone', case: 'Pochette', other: 'Divers' };
 const xof = (value: string | number) => new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 2,
 }).format(Number(value)) + ' FCFA';
@@ -49,7 +44,6 @@ async function parseResponse(response: Response) {
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -62,7 +56,7 @@ export default function Products() {
   useEffect(() => {
     const abort = new AbortController();
     setLoading(true);
-    fetch('/api/products/?q=' + encodeURIComponent(query) + '&category=' + encodeURIComponent(category), {
+    fetch('/api/products/?q=' + encodeURIComponent(query), {
       credentials: 'same-origin', signal: abort.signal,
     })
       .then((response) => parseResponse(response))
@@ -77,16 +71,16 @@ export default function Products() {
       })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); });
     return () => abort.abort();
-  }, [query, category]);
+  }, [query]);
 
   async function reload() {
-    const response = await fetch('/api/products/?q=' + encodeURIComponent(query) + '&category=' + encodeURIComponent(category), { credentials: 'same-origin' });
+    const response = await fetch('/api/products/?q=' + encodeURIComponent(query), { credentials: 'same-origin' });
     const payload = await parseResponse(response) as { results: Product[] };
     setProducts(payload.results);
   }
 
-  function openNew() {
-    setForm({ ...fresh }); setError(''); setDialog({ type: 'new' });
+  function openNew(kind: 'phone' | 'other') {
+    setForm({ ...fresh }); setError(''); setDialog({ type: 'new', kind });
   }
   function openAction(type: 'stock' | 'imeis', product: Product) {
     setDelta(''); setReason(''); setImeis(''); setError('');
@@ -106,10 +100,14 @@ export default function Products() {
     try {
       if (dialog.type === 'new') {
         await apiPost('/api/products/', {
-          ...form,
-          quantity: form.category === 'phone' ? 0 : Number(form.quantity),
-          low_stock_threshold: Number(form.low_stock_threshold),
-          phones: form.category === 'phone' ? phonesFromText(form.imeis) : [],
+          name: form.name,
+          model: dialog.kind === 'phone' ? form.model : '',
+          category: dialog.kind,
+          purchase_price: form.purchase_price,
+          sale_price: form.sale_price,
+          quantity: dialog.kind === 'phone' ? 0 : Number(form.quantity),
+          low_stock_threshold: 3,
+          phones: dialog.kind === 'phone' ? phonesFromText(form.imeis) : [],
         });
       } else if (dialog.type === 'imeis') {
         const phones = phonesFromText(imeis);
@@ -134,15 +132,10 @@ export default function Products() {
       <div className="catalog-toolbar">
         <div className="catalog-search">
           <Search size={18}/>
-          <input aria-label="Rechercher un produit" placeholder="Nom, marque, référence ou IMEI…" value={query} onChange={(e) => setQuery(e.target.value)}/>
+          <input aria-label="Rechercher un produit" placeholder="Nom, modèle ou IMEI…" value={query} onChange={(e) => setQuery(e.target.value)}/>
         </div>
-        <select aria-label="Filtrer par catégorie" className="catalog-category" value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">Toutes catégories</option>
-          <option value="phone">Téléphones</option>
-          <option value="case">Pochettes</option>
-          <option value="other">Divers</option>
-        </select>
-        <button className="catalog-add" onClick={openNew}><Plus size={17}/> Ajouter un article</button>
+        <button className="catalog-add" onClick={() => openNew('phone')}><Smartphone size={17}/> Ajouter un téléphone</button>
+        <button className="catalog-action catalog-add-other" onClick={() => openNew('other')}><Plus size={17}/> Ajouter un article</button>
       </div>
       <div className="catalog-summary">
         <span><Boxes size={15} style={{ verticalAlign: 'middle', marginRight: 7 }}/><strong>{products.length}</strong> produits affichés</span>
@@ -157,11 +150,10 @@ export default function Products() {
           </div>
         ) : (
           <table className="catalog-table">
-            <thead><tr><th>Produit</th><th>Catégorie</th><th>Prix d'achat</th><th>Prix de vente</th><th>Stock</th><th>Action</th></tr></thead>
+            <thead><tr><th>Produit</th><th>Prix d'achat</th><th>Prix de vente</th><th>Stock</th><th>Action</th></tr></thead>
             <tbody>{products.map((item) => (
               <tr key={item.id}>
-                <td><span className="catalog-itemname">{item.name}</span><span className="catalog-ref">{item.sku || [item.brand, item.model].filter(Boolean).join(' ') || 'Sans référence'}</span></td>
-                <td>{labels[item.category]}</td>
+                <td><span className="catalog-itemname">{item.name}</span>{item.model ? <span className="catalog-ref">Modèle : {item.model}</span> : null}</td>
                 <td className="catalog-number">{xof(item.purchase_price)}</td>
                 <td className="catalog-number">{xof(item.sale_price)}</td>
                 <td><span className={'catalog-stock ' + (item.low_stock ? 'low' : '')}>{item.quantity} unité(s)</span></td>
@@ -177,41 +169,41 @@ export default function Products() {
         <div className="catalog-backdrop" role="presentation">
           <section className="catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
             <div className="catalog-modal-header">
-              <div><h3 id="catalog-title">{dialog.type === 'new' ? 'Ajouter un article' : dialog.type === 'imeis' ? 'Ajouter des téléphones' : 'Corriger le stock'}</h3>
-                <p>{dialog.type === 'new' ? 'Quelques champs, puis ton produit est prêt.' : dialog.product.name}</p>
+              <div><h3 id="catalog-title">{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Ajouter un téléphone' : 'Ajouter un article') : dialog.type === 'imeis' ? 'Ajouter des téléphones' : 'Corriger le stock'}</h3>
+                <p>{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Nom et modèle sont deux informations différentes.' : 'Pochette, chargeur ou autre article : saisie rapide.') : dialog.product.name}</p>
               </div>
               <button className="catalog-close" aria-label="Fermer" onClick={() => setDialog(null)}><X size={19}/></button>
             </div>
             <form className="catalog-form" onSubmit={submit}>
               {dialog.type === 'new' ? (
                 <>
-                  <div className="catalog-fields">
+                  <div className="catalog-field">
+                    <label htmlFor="product-name">Nom du produit *</label>
+                    <input id="product-name" autoFocus required maxLength={160} value={form.name}
+                      onChange={(e) => update('name', e.target.value)}
+                      placeholder={dialog.kind === 'phone' ? 'Ex. Samsung' : 'Ex. Pochette Samsung A17'}/>
+                  </div>
+                  {dialog.kind === 'phone' && (
                     <div className="catalog-field">
-                      <label htmlFor="product-category">Catégorie</label>
-                      <select id="product-category" value={form.category} onChange={(e) => update('category', e.target.value)}>
-                        <option value="case">Pochette</option><option value="phone">Téléphone</option><option value="other">Autre article</option>
-                      </select>
+                      <label htmlFor="product-model">Modèle *</label>
+                      <input id="product-model" required maxLength={70} value={form.model}
+                        onChange={(e) => update('model', e.target.value)} placeholder="Ex. Galaxy A17 128 Go"/>
+                      <small>Nom du produit : Samsung · Modèle : Galaxy A17. Pas besoin de les répéter.</small>
                     </div>
-                    <div className="catalog-field"><label htmlFor="product-name">Nom du produit *</label><input id="product-name" autoFocus required value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="Ex. Pochette Samsung A15"/></div>
-                  </div>
-                  <div className="catalog-fields">
-                    <div className="catalog-field"><label htmlFor="product-sku">Référence (facultatif)</label><input id="product-sku" value={form.sku} onChange={(e) => update('sku', e.target.value)} placeholder="REF-001"/></div>
-                    <div className="catalog-field"><label htmlFor="product-brand">Marque (facultatif)</label><input id="product-brand" value={form.brand} onChange={(e) => update('brand', e.target.value)} placeholder="Samsung"/></div>
-                  </div>
-                  {form.category === 'phone' && <div className="catalog-field"><label htmlFor="product-model">Modèle</label><input id="product-model" value={form.model} onChange={(e) => update('model', e.target.value)} placeholder="Galaxy A15, 128 Go"/></div>}
+                  )}
                   <div className="catalog-fields">
                     <div className="catalog-field"><label htmlFor="product-cost">Prix d'achat (FCFA)</label><input id="product-cost" type="number" min="0" step=".01" required value={form.purchase_price} onChange={(e) => update('purchase_price', e.target.value)}/></div>
                     <div className="catalog-field"><label htmlFor="product-price">Prix de vente (FCFA)</label><input id="product-price" type="number" min=".01" step=".01" required value={form.sale_price} onChange={(e) => update('sale_price', e.target.value)}/></div>
                   </div>
-                  <div className="catalog-fields">
-                    {form.category !== 'phone' ? <div className="catalog-field"><label htmlFor="product-qty">Quantité initiale</label><input id="product-qty" type="number" min="0" max="1000000" step="1" value={form.quantity} onChange={(e) => update('quantity', e.target.value)}/></div> : <div className="catalog-field"><label>Stock téléphones</label><small>Calculé à partir des IMEI uniques saisis ci-dessous.</small></div>}
-                    <div className="catalog-field"><label htmlFor="product-threshold">Alerte stock à partir de</label><input id="product-threshold" type="number" min="0" max="1000" step="1" value={form.low_stock_threshold} onChange={(e) => update('low_stock_threshold', e.target.value)}/></div>
-                  </div>
-                  {form.category === 'phone' && <div className="catalog-field">
-                    <label htmlFor="product-imeis"><Barcode size={15} style={{ verticalAlign: 'middle' }}/> IMEI (un téléphone par ligne)</label>
-                    <textarea id="product-imeis" value={form.imeis} onChange={(e) => update('imeis', e.target.value)} placeholder="IMEI principal, IMEI secondaire facultatif"/>
-                    <small>Scanner USB ou saisie manuelle. Une ligne par téléphone ; IMEI secondaire séparé par une virgule. Possibilité d'ajouter des IMEI plus tard.</small>
-                  </div>}
+                  {dialog.kind === 'phone' ? (
+                    <div className="catalog-field">
+                      <label htmlFor="product-imeis"><Barcode size={15} style={{ verticalAlign: 'middle' }}/> IMEI (facultatif maintenant)</label>
+                      <textarea id="product-imeis" value={form.imeis} onChange={(e) => update('imeis', e.target.value)} placeholder="Un IMEI principal par ligne"/>
+                      <small>Scanner l'IMEI sur le téléphone ou son emballage. Il doit avoir 15 chiffres et une clé de contrôle valide. Tu peux créer le modèle puis ajouter l'IMEI ensuite.</small>
+                    </div>
+                  ) : (
+                    <div className="catalog-field"><label htmlFor="product-qty">Quantité initiale</label><input id="product-qty" type="number" min="0" max="1000000" step="1" value={form.quantity} onChange={(e) => update('quantity', e.target.value)}/></div>
+                  )}
                 </>
               ) : dialog.type === 'imeis' ? (
                 <div className="catalog-field">

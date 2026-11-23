@@ -3,7 +3,7 @@ import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
   CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
   Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Wallet,
-  WifiOff, X,
+  WifiOff, LogOut, X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -24,7 +24,7 @@ const nav: NavItem[] = [
 ];
 
 const goals = [
-  { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Compte unique du propriétaire' },
+  { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Accès sécurisé actif' },
   { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
   { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes' },
   { icon: CreditCard, title: 'Factures & créances', subtitle: 'Phases 06–07 · Suivi des paiements' },
@@ -35,7 +35,7 @@ const preferredTheme = (): boolean => {
   catch { return false; }
 };
 
-export default function App() {
+export default function App({ ownerName, onLogout }: { ownerName?: string; onLogout?: () => void }) {
   const [page, setPage] = useState<Page>('dashboard');
   const [dark, setDark] = useState(preferredTheme);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -108,16 +108,21 @@ export default function App() {
             </div>
             <button className="icon-btn" aria-label="Changer le thème" title="Mode jour/nuit" onClick={() => setDark((value) => !value)}>{dark ? <Sun size={20}/> : <Moon size={20}/>}</button>
             <button className="icon-btn" aria-label="Notifications" title="Notifications" onClick={() => navigate('notifications')}><Bell size={20}/></button>
-            <div className="avatar" aria-label="Profil de démonstration">PS</div>
+            {onLogout ? (
+              <button className="logout-button" title="Se déconnecter" aria-label="Se déconnecter" onClick={onLogout}>
+                <LogOut size={18}/><span>Déconnexion</span>
+              </button>
+            ) : null}
+            <div className="avatar" aria-label={ownerName ? 'Connecté : ' + ownerName : 'Profil de démonstration'}>PS</div>
           </div>
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 01 · FONDATIONS</span>
+            <div><span className="tag">PHASE 02 · CONNEXION SÉCURISÉE</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
-            <span className="phase-pill"><CheckCircle2 size={15}/> Socle de développement</span>
+            <span className="phase-pill"><CheckCircle2 size={15}/> Connexion protégée</span>
           </div>
           {page === 'dashboard' ? (
             <>
@@ -125,7 +130,7 @@ export default function App() {
                 <div className="hero-text">
                   <span>UN PROPRIÉTAIRE · PC ET TÉLÉPHONE</span>
                   <h3>Une boutique mieux organisée, <em>sans complexité.</em></h3>
-                  <p>Téléphones, pochettes, ventes et créances dans une application élégante. Le socle est prêt : les fonctions commerciales seront ajoutées phase par phase.</p>
+                  <p>Téléphones, pochettes, ventes et créances dans une application élégante. Votre espace est désormais protégé par un compte propriétaire. Les fonctions commerciales arriveront phase par phase.</p>
                   <button onClick={() => navigate('checkout')}>Découvrir la caisse <ChevronRight size={17}/></button>
                 </div>
                 <Smartphone className="hero-phone" size={136} strokeWidth={1}/>
@@ -136,7 +141,7 @@ export default function App() {
                   <article className="feature-card" key={title}><div className="feature-icon"><Icon size={22}/></div><h4>{title}</h4><p>{subtitle}</p></article>
                 ))}
               </div>
-              <section className="note"><CheckCircle2 size={20}/><div><strong>Base de développement créée</strong><p>Cette première interface ne contient pas de fausses ventes. L'enregistrement des transactions sera développé avec la sécurité et le stock.</p></div></section>
+              <section className="note"><CheckCircle2 size={20}/><div><strong>Accès propriétaire sécurisé</strong><p>L'accès au tableau de bord nécessite une connexion. Les ventes et stocks seront ajoutés dans les phases suivantes.</p></div></section>
             </>
           ) : (
             <section className="placeholder">
@@ -148,7 +153,7 @@ export default function App() {
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 01 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 02 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

@@ -1,7 +1,7 @@
 # Développement par phases
 
 - **Phase 01** : socle Docker + Django + PostgreSQL + React, interface premium responsive, état API et tests.
-- **Phase 02** : compte unique du propriétaire, login compact et sécurisé, protection contre les tentatives de connexion, récupération de compte.
+- **Phase 02** : compte unique du propriétaire, login compact et sécurisé, session Django, CSRF, protection contre les tentatives de connexion ; création et réinitialisation par commande locale.
 - **Phase 03** : catalogue téléphones, IMEI individuels, pochettes, produits divers, stock.
 - **Phase 04** : achats fournisseurs multi-lignes et réception du stock.
 - **Phase 05** : caisse rapide et panier intelligent, paiements complets ou partiels.

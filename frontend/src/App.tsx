@@ -6,6 +6,7 @@ import {
   WifiOff, LogOut, X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Products from './Products';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -118,13 +119,15 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 02 · CONNEXION SÉCURISÉE</span>
+            <div><span className="tag">PHASE 03 · PRODUITS & STOCK</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
-            <span className="phase-pill"><CheckCircle2 size={15}/> Connexion protégée</span>
+            <span className="phase-pill"><CheckCircle2 size={15}/> Catalogue actif</span>
           </div>
-          {page === 'dashboard' ? (
+          {page === 'products' ? (
+            <Products />
+          ) : page === 'dashboard' ? (
             <>
               <section className="hero">
                 <div className="hero-text">
@@ -153,7 +156,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 02 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 03 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

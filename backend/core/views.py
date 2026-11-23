@@ -11,7 +11,7 @@ def meta(request):
         "application": "PhoneStock Pro",
         "phase": "01",
         "modules": {
-            "dashboard": "prototype", "authentication": "ready", "sales": "planned", "products": "planned",
+            "dashboard": "prototype", "authentication": "ready", "catalog": "ready", "sales": "planned", "products": "planned",
             "purchases": "planned", "debts": "planned", "reports": "planned",
         },
     })

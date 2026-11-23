@@ -155,6 +155,7 @@ class Sale(models.Model):
     client_ref = models.UUIDField(unique=True)
     payload_hash = models.CharField(max_length=64)
     owner = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="store_sales")
+    branding = models.ForeignKey("ShopBranding", on_delete=models.PROTECT, related_name="sales")
     customer_name = models.CharField(max_length=160, blank=True)
     customer_phone = models.CharField(max_length=30, blank=True)
     due_date = models.DateField(null=True, blank=True)
@@ -209,3 +210,23 @@ class SalePayment(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     method = models.CharField(max_length=10, choices=Sale.PaymentMethod.choices)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class ShopBranding(models.Model):
+    """Immutable versioned invoice heading, including its optional validated raster logo."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=160)
+    phone = models.CharField(max_length=40, blank=True)
+    email = models.EmailField(blank=True)
+    address = models.CharField(max_length=240, blank=True)
+    tax_id = models.CharField(max_length=90, blank=True)
+    footer = models.CharField(max_length=240, blank=True)
+    logo_data = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ShopConfig(models.Model):
+    """One active configuration per installation; old versions are preserved."""
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    branding = models.ForeignKey(ShopBranding, on_delete=models.PROTECT, related_name="+")

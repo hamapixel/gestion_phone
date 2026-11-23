@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .catalog_views import amount, clean_text, number, owner_only, read_payload
 from .models import (
-    PhoneIdentifier, PhoneUnit, Product, Sale, SaleLine, SalePayment, StockMovement,
+    PhoneIdentifier, PhoneUnit, Product, Sale, SaleLine, SalePayment, StockMovement, ShopConfig,
 )
 
 MAX_LINES = 80
@@ -177,8 +177,9 @@ def sales(request):
             if balance and (not customer_name or not customer_phone):
                 raise ValueError("Nom et téléphone du client obligatoires pour une vente à crédit.")
             status = Sale.Status.CREDIT if balance else Sale.Status.PAID
+            brand = ShopConfig.objects.select_related("branding").get(pk=1).branding
             sale = Sale.objects.create(
-                client_ref=ref, payload_hash=fingerprint, owner=request.user,
+                client_ref=ref, payload_hash=fingerprint, owner=request.user, branding=brand,
                 customer_name=customer_name, customer_phone=customer_phone, due_date=due_date,
                 method=method, status=status, total=total, cost_total=cost_total,
                 gross_profit=total - cost_total, amount_paid=paid, balance=balance,

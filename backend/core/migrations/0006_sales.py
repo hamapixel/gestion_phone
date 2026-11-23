@@ -52,6 +52,10 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ("quantity", models.PositiveIntegerField()),
+                ("product_name", models.CharField(max_length=160)),
+                ("product_brand", models.CharField(blank=True, max_length=70)),
+                ("product_model", models.CharField(blank=True, max_length=70)),
+                ("product_condition", models.CharField(default="new", max_length=4)),
                 ("unit_price", models.DecimalField(decimal_places=2, max_digits=12)),
                 ("unit_cost", models.DecimalField(decimal_places=2, max_digits=12)),
                 ("line_total", models.DecimalField(decimal_places=2, max_digits=15)),

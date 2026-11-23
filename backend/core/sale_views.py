@@ -30,9 +30,10 @@ def sale_data(sale):
             primary_imei = identifier.imei if identifier else ""
         lines.append({
             "product_id": str(line.product_id),
-            "product_name": line.product.name,
-            "brand": line.product.brand,
-            "model": line.product.model,
+            "product_name": line.product_name,
+            "brand": line.product_brand,
+            "model": line.product_model,
+            "condition": line.product_condition,
             "quantity": line.quantity,
             "imei": primary_imei,
             "unit_price": str(line.unit_price),
@@ -164,6 +165,8 @@ def sales(request):
                 cost_total += line_cost
                 prepared.append((product, unit, quantity, unit_price, line_total, line_cost))
 
+            if total > Decimal("9999999999999.99"):
+                raise ValueError("Total de vente trop élevé.")
             if paid > total:
                 raise ValueError("Le versement ne peut pas dépasser le total de la vente.")
             balance = total - paid
@@ -179,6 +182,8 @@ def sales(request):
             for product, unit, qty, price, line_total, line_cost in prepared:
                 SaleLine.objects.create(
                     sale=sale, product=product, phone_unit=unit, quantity=qty,
+                    product_name=product.name, product_brand=product.brand,
+                    product_model=product.model, product_condition=product.condition,
                     unit_price=price, unit_cost=product.purchase_price,
                     line_total=line_total, line_cost=line_cost,
                 )

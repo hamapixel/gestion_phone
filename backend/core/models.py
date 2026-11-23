@@ -177,6 +177,10 @@ class SaleLine(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sale = models.ForeignKey(Sale, on_delete=models.PROTECT, related_name="lines")
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="sale_lines")
+    product_name = models.CharField(max_length=160)
+    product_brand = models.CharField(max_length=70, blank=True)
+    product_model = models.CharField(max_length=70, blank=True)
+    product_condition = models.CharField(max_length=4, default="new")
     phone_unit = models.ForeignKey(
         PhoneUnit, on_delete=models.PROTECT, related_name="sale_lines",
         null=True, blank=True,

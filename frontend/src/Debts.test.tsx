@@ -37,8 +37,8 @@ describe('PhoneStock — créances', () => {
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
   it('affiche la créance réelle en carte, le reste dû et les échéances', async () => {
     render(<Debts/>);
-    expect(await screen.findByText('Awa Coulibaly')).toBeTruthy();
-    expect(screen.getByText('VTE-AAA123', { exact: false })).toBeTruthy();
+    expect((await screen.findAllByText('Awa Coulibaly')).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('VTE-AAA123', { exact: false }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText('7 000 FCFA', { exact: false }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Historique des versements (1)')).toBeTruthy();
     expect(document.querySelector('.debt-card')).not.toBeNull();
@@ -49,7 +49,7 @@ describe('PhoneStock — créances', () => {
   });
   it('encaisse la moitié avec CSRF sans modifier le montant de la vente', async () => {
     render(<Debts/>);
-    await screen.findByText('Awa Coulibaly');
+    await screen.findAllByText('Awa Coulibaly');
     fireEvent.click(screen.getByRole('button', { name: 'Encaisser' }));
     fireEvent.click(screen.getByRole('button', { name: 'Moitié' }));
     expect((screen.getByLabelText('Montant à encaisser') as HTMLInputElement).value).toBe('3500.00');

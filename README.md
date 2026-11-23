@@ -2,12 +2,12 @@
 
 Socle technique de l'application de gestion de téléphones, pochettes et produits divers. **Chaque logiciel est réservé au propriétaire de la boutique : un seul compte, sans rôles gérant/vendeur.** Le propriétaire pourra utiliser le même compte sur son PC et son téléphone (synchronisation prévue dans une phase ultérieure).
 
-## Démarrage Windows (Phase 05 : caisse intelligente)
+## Démarrage Windows (Phase 06 : factures et reçus)
 
 ~~~powershell
 git clone https://github.com/hamapixel/gestion_phone.git
 cd gestion_phone
-git switch feature/phase-05-smart-pos-sales
+git switch feature/phase-06-invoices-receipts
 Copy-Item .env.example .env
 docker compose up --build -d
 docker compose ps
@@ -71,3 +71,9 @@ La référence `client_ref` rend un nouvel envoi identique sûr contre les vente
 ## Créances actives (complément Phase 05)
 
 Les ventes payées à moitié ou à crédit apparaissent dans « Créances » avec client, téléphone, échéance, total, encaissé et solde. Filtres En cours / En retard / Payées / Toutes, recherche, historique des versements. « Encaisser » permet Tout / Moitié / Autre montant, avec moyen de paiement, validation atomique et référence UUID anti-doublon. Les remboursements ne s'ajoutent **jamais** au chiffre d'affaires de la vente. L'option « Relancer WhatsApp » ouvre un message prérempli sans l'envoyer automatiquement.
+
+## Phase 06 — En-tête personnalisable, factures, reçus
+
+Dans **Paramètres**, configurer le nom de la boutique, téléphone, adresse, email, NIF/RCCM, message de pied de page et logo PNG/JPG/WebP (90 Ko maximum). Chaque modification crée une **version immuable** de l'en-tête. Les ventes gardent la version active au moment de la vente. Les ventes existantes avant cette mise à jour reçoivent une seule fois l'en-tête initial par défaut lors de la migration.
+
+Depuis **Caisse > Dernières ventes** ou après une vente, cliquer **Facture** ; depuis **Créances**, cliquer **Facture** ou **Reçu** sur un versement. L'aperçu contient les lignes, montants, IMEI des téléphones, paiement et solde sans exposer le coût d'achat ni la marge. Choisir **A4, A5 ou Ticket 80 mm**, puis utiliser « Imprimer / Enregistrer en PDF » : la fonction PDF repose sur le dialogue d'impression du navigateur, pas sur un export PDF serveur.

@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { CalendarClock, CheckCircle2, CreditCard, Search, Wallet, X } from 'lucide-react';
+import { CalendarClock, CheckCircle2, CreditCard, ReceiptText, Search, Wallet, X } from 'lucide-react';
+import InvoiceModal from './InvoiceModal';
 
 type Payment = { id: string; client_ref: string | null; amount: string; method: string; created_at: string };
 type Debt = {
@@ -41,6 +42,8 @@ export default function Debts() {
   const [busy, setBusy] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [notice, setNotice] = useState('');
+  const [documentSale, setDocumentSale] = useState<string | null>(null);
+  const [documentPayment, setDocumentPayment] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -163,10 +166,14 @@ export default function Debts() {
                   <div key={payment.id} className="debt-payment-line">
                     <span>{formattedDate(payment.created_at)} · {methods[payment.method] || payment.method}</span>
                     <strong>{money(payment.amount)}</strong>
+                    <button className="debt-document" onClick={() => setDocumentPayment(payment.id)}>Reçu</button>
                   </div>
                 )) : <p>Aucun versement.</p>}
               </details>
               <div className="debt-actions">
+                <button className="debt-remind" onClick={() => setDocumentSale(debt.id)}>
+                  <ReceiptText size={16}/> Facture
+                </button>
                 {Number(debt.balance) > 0 && <button className="debt-pay" onClick={() => openPayment(debt)}>
                   <CreditCard size={16}/> Encaisser
                 </button>}
@@ -180,6 +187,8 @@ export default function Debts() {
       ) : <div className="debt-empty"><Wallet size={32}/><p>Aucune créance pour ce filtre.</p>
         <small>Les ventes à crédit enregistrées dans la caisse apparaissent automatiquement ici.</small>
       </div>)}
+      {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>}
+      {documentPayment && <InvoiceModal paymentId={documentPayment} onClose={() => setDocumentPayment(null)}/>}
       {selected && (
         <div className="catalog-backdrop">
           <section role="dialog" aria-modal="true" aria-labelledby="debt-modal-title" className="catalog-modal debt-modal">

@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { BadgeCheck, Barcode, Minus, Plus, Search, ShoppingBasket, Smartphone, Trash2, X } from 'lucide-react';
+import { BadgeCheck, Barcode, Minus, Plus, ReceiptText, Search, ShoppingBasket, Smartphone, Trash2, X } from 'lucide-react';
+import InvoiceModal from './InvoiceModal';
 
 type Product = {
   id: string; name: string; brand: string; model: string;
@@ -55,6 +56,7 @@ export default function Checkout() {
   const [dueDate, setDueDate] = useState('');
   const [salesData, setSalesData] = useState<SaleList | null>(null);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [invoiceSaleId, setInvoiceSaleId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -218,8 +220,11 @@ export default function Checkout() {
           <div>
             <strong>Vente {lastSale.reference} enregistrée</strong>
             <p>Total {money(lastSale.total)} · Versé {money(lastSale.amount_paid)} · Reste {money(lastSale.balance)}</p>
-            <small>La facture personnalisée et son impression arrivent en Phase 06.</small>
+            <small>Facture prête : impression A4, A5 ou ticket.</small>
           </div>
+          <button type="button" className="pos-new-button" onClick={() => setInvoiceSaleId(lastSale.id)}>
+            <ReceiptText size={16}/> Facture / reçu
+          </button>
           <button type="button" className="pos-new-button" onClick={clearForNextSale}>Nouvelle vente</button>
         </section>
       )}
@@ -351,11 +356,13 @@ export default function Checkout() {
               <article key={sale.id} className="pos-recent-card">
                 <div><strong>{sale.reference}</strong><small>{new Date(sale.created_at).toLocaleString('fr-FR')}</small></div>
                 <div><strong>{money(sale.total)}</strong><small>{sale.status === 'credit' ? 'Créance : ' + money(sale.balance) : 'Payée'}</small></div>
+                <button className="pos-invoice-button" onClick={() => setInvoiceSaleId(sale.id)}><ReceiptText size={15}/> Facture</button>
               </article>
             ))}
           </div>
         }
       </section>
+      {invoiceSaleId && <InvoiceModal saleId={invoiceSaleId} onClose={() => setInvoiceSaleId(null)}/>}
       {phoneProduct && (
         <div className="catalog-backdrop" role="presentation">
           <section className="catalog-modal pos-phone-modal" role="dialog" aria-modal="true" aria-labelledby="pos-phone-title">

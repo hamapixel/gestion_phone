@@ -14,14 +14,16 @@ import ShopSettings from './ShopSettings';
 import Reports from './Reports';
 import Expenses from './Expenses';
 import Notifications from './Notifications';
+import OfflinePOS from './OfflinePOS';
 
-type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
+type Page = 'dashboard' | 'checkout' | 'offline' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
 type NavItem = { id: Page; label: string; icon: LucideIcon; description: string };
 
 const nav: NavItem[] = [
   { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, description: 'Les informations essentielles de votre boutique.' },
   { id: 'checkout', label: 'Caisse', icon: ShoppingCart, description: 'Panier intelligent et vente rapide.' },
+  { id: 'offline', label: 'Hors connexion', icon: WifiOff, description: 'Brouillons de vente chiffrés et synchronisation sécurisée.' },
   { id: 'products', label: 'Produits & stock', icon: Boxes, description: 'Téléphones, pochettes et produits divers.' },
   { id: 'purchases', label: 'Achats & fournisseurs', icon: PackagePlus, description: 'Réapprovisionnements et gestion du stock.' },
   { id: 'debts', label: 'Créances', icon: Wallet, description: 'Suivi des montants à recevoir.' },
@@ -100,7 +102,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         <div className="sidebar-bottom">
           <div className="menu-divider"/>
           <button className="collapse-control" onClick={() => setCollapsed((value) => !value)}><Menu size={19}/><span>Réduire le menu</span></button>
-          <p>PhoneStock Pro · Phase 07</p>
+          <p>PhoneStock Pro · Phase 08</p>
         </div>
       </aside>
       <div className="content">
@@ -126,7 +128,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 07 · RAPPORTS & DÉPENSES</span>
+            <div><span className="tag">PHASE 08 · COFFRE HORS LIGNE</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
@@ -138,6 +140,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <Checkout />
           ) : page === 'purchases' ? (
             <Purchases />
+          ) : page === 'offline' ? (
+            <OfflinePOS onBack={() => navigate('checkout')}/>
           ) : page === 'debts' ? (
             <Debts />
           ) : page === 'settings' ? (
@@ -177,7 +181,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 07 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 08 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

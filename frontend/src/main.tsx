@@ -6,3 +6,11 @@ import './styles.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><AuthGate/></React.StrictMode>
 );
+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Browsers that block service workers may still use the app online.
+    });
+  });
+}

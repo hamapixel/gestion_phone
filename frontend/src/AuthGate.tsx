@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import App from './App';
 import Login from './Login';
+import OfflinePOS from './OfflinePOS';
+import { hasVault, lockVault } from './offlineVault';
 
 type Session = { authenticated: boolean; owner?: string };
-type AuthState = 'loading' | 'logged-out' | 'logged-in';
+type AuthState = 'loading' | 'logged-out' | 'logged-in' | 'offline';
 
 function csrfCookie(): string {
   const value = document.cookie.split('; ').find((part) => part.startsWith('csrftoken='));
@@ -37,8 +39,14 @@ export default function AuthGate() {
         }
       } catch {
         if (!controller.signal.aborted) {
-          setError('Connexion au serveur impossible. Vérifie que Docker est démarré.');
-          setState('logged-out');
+          // Only expose encrypted local drafts when this browser has already
+          // prepared an offline vault. Never bypass Django for online access.
+          const prepared = await hasVault().catch(() => false);
+          if (controller.signal.aborted) return;
+          setError(prepared
+            ? 'Serveur indisponible. Seul le coffre local est accessible avec sa phrase secrète.'
+            : 'Connexion au serveur impossible. Vérifie que Docker est démarré.');
+          setState(prepared ? 'offline' : 'logged-out');
         }
       }
     })();
@@ -77,6 +85,7 @@ export default function AuthGate() {
         headers: { 'X-CSRFToken': csrfCookie() },
       });
       if (!response.ok) throw new Error('Déconnexion refusée');
+      lockVault();
       setOwner('');
       setError('');
       setState('logged-out');
@@ -91,6 +100,12 @@ export default function AuthGate() {
     return <div className="auth-screen"><div className="auth-loading" role="status">
       <span className="auth-spinner"/>Vérification de votre session…
     </div></div>;
+  }
+  if (state === 'offline') {
+    return <div className="offline-access">
+      {error && <p className="offline-session-info">{error}</p>}
+      <OfflinePOS standalone/>
+    </div>;
   }
   if (state === 'logged-out') {
     return <Login onSubmit={signIn} disabled={busy} error={error}/>;

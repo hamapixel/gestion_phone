@@ -91,7 +91,7 @@ def phone_entries(value):
         primary = entry.get("imei")
         secondary = entry.get("imei2") or ""
         if not is_valid_imei(primary) or (secondary and not is_valid_imei(secondary)):
-            raise ValueError("Chaque IMEI doit contenir 15 chiffres et une clé de contrôle valide.")
+            raise ValueError("IMEI invalide : vérifie les 15 chiffres (compose *#06# sur le téléphone).")
         for current in [primary] + ([secondary] if secondary else []):
             if current in seen:
                 raise ValueError("IMEI dupliqué dans la réception.")
@@ -123,7 +123,7 @@ def product_data(product):
     return {
         "id": str(product.pk), "name": product.name,
         "category": product.category, "sku": product.sku,
-        "brand": product.brand, "model": product.model,
+        "brand": product.brand, "model": product.model, "condition": product.condition,
         "purchase_price": str(product.purchase_price),
         "sale_price": str(product.sale_price),
         "quantity": qty, "low_stock_threshold": product.low_stock_threshold,
@@ -157,8 +157,11 @@ def products(request):
         if category not in Product.Category.values:
             raise ValueError("Catégorie invalide.")
         sku = clean_text(data.get("sku", ""), "Référence", 60)
-        brand = clean_text(data.get("brand", ""), "Marque", 70)
+        brand = clean_text(data.get("brand", ""), "Marque", 70, required=category == Product.Category.PHONE)
         model = clean_text(data.get("model", ""), "Modèle", 70, required=category == Product.Category.PHONE)
+        condition = data.get("condition", Product.Condition.NEW)
+        if condition not in Product.Condition.values:
+            raise ValueError("État invalide : Neuf ou Occasion attendu.")
         purchase_price = amount(data.get("purchase_price"), "Prix d'achat", allow_zero=True)
         sale_price = amount(data.get("sale_price"), "Prix de vente")
         threshold = number(data.get("low_stock_threshold", 3), "Seuil d'alerte", 1000)
@@ -170,7 +173,7 @@ def products(request):
             raise ValueError("Les IMEI concernent uniquement les téléphones.")
         with transaction.atomic():
             product = Product.objects.create(
-                name=name, category=category, sku=sku, brand=brand, model=model,
+                name=name, category=category, sku=sku, brand=brand, model=model, condition=condition,
                 purchase_price=purchase_price, sale_price=sale_price,
                 quantity=0 if category == Product.Category.PHONE else quantity,
                 low_stock_threshold=threshold,

@@ -100,6 +100,37 @@ class CatalogTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Product.objects.count(), 0)
 
+    def test_phone_brand_and_condition_are_saved(self):
+        response = self.post_json(reverse("products"), {
+            "name": "Téléphone", "category": "phone", "brand": "Samsung",
+            "model": "Galaxy A17", "condition": "used",
+            "purchase_price": "85000", "sale_price": "95000", "quantity": 0,
+        })
+        self.assertEqual(response.status_code, 201, response.content)
+        created = response.json()["product"]
+        self.assertEqual(created["brand"], "Samsung")
+        self.assertEqual(created["model"], "Galaxy A17")
+        self.assertEqual(created["condition"], "used")
+        self.assertEqual(created["quantity"], 0)
+
+    def test_phone_brand_and_condition_are_checked(self):
+        data = {
+            "name": "Téléphone", "category": "phone",
+            "model": "Galaxy A17", "condition": "new",
+            "purchase_price": "85000", "sale_price": "95000", "quantity": 0,
+        }
+        self.assertEqual(self.post_json(reverse("products"), data).status_code, 400)
+        data["brand"] = "Samsung"
+        data["condition"] = "unknown"
+        self.assertEqual(self.post_json(reverse("products"), data).status_code, 400)
+        self.assertEqual(Product.objects.count(), 0)
+
+    def test_incomplete_imei_is_rejected_without_partial_creation(self):
+        response = self.create_phone([{"imei": "96366666455456"}])
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("15 chiffres", response.json()["detail"])
+        self.assertEqual(Product.objects.count(), 0)
+
     def test_add_phones_scanner_batch(self):
         response = self.create_phone()
         product_id = response.json()["product"]["id"]

@@ -28,6 +28,11 @@ class Product(models.Model):
     sku = models.CharField(max_length=60, blank=True)
     brand = models.CharField(max_length=70, blank=True)
     model = models.CharField(max_length=70, blank=True)
+    class Condition(models.TextChoices):
+        NEW = "new", "Neuf"
+        USED = "used", "Occasion"
+
+    condition = models.CharField(max_length=4, choices=Condition.choices, default=Condition.NEW)
     purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
     sale_price = models.DecimalField(max_digits=12, decimal_places=2)
     # Phones are counted via individual PhoneUnit records, not this field.

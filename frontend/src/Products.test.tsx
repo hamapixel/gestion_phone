@@ -90,7 +90,7 @@ describe('PhoneStock - catalogue', () => {
     expect(await screen.findByText('Samsung · Galaxy A17 · Neuf')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Détails' }));
     expect(await screen.findByText('IMEI 1 : 490154203237518')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Modifier' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Modifier' }).at(-1)!);
     expect(screen.getByLabelText('Marque *')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Prix de vente (FCFA)'), { target: { value: '97000' } });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));

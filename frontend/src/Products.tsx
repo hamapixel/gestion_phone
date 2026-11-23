@@ -62,10 +62,10 @@ function imeiHint(text: string): { suggested?: string; message: string } | null 
   if (!/^\d+$/.test(digits)) return { message: "L'IMEI ne doit contenir que des chiffres." };
   if (digits.length === 14) {
     const suggested = digits + imeiLastDigit(digits);
-    return { suggested, message: "14 chiffres saisis : le 15e chiffre calculé est " + suggested[14] + ". Vérifie avec *#06# avant de l'utiliser." };
+    return { suggested, message: "14 chiffres saisis : le 15e chiffre calculé est " + suggested[14] + ". Compare les 15 chiffres avec l'étiquette IMEI de la boîte avant de l'enregistrer." };
   }
-  if (digits.length !== 15) return { message: digits.length + "/15 chiffres. Affiche l'IMEI complet avec *#06#." };
-  if (imeiLastDigit(digits.slice(0, 14)) !== digits[14]) return { message: "L'IMEI a 15 chiffres mais le dernier semble incorrect. Vérifie avec *#06#." };
+  if (digits.length !== 15) return { message: digits.length + "/15 chiffres. Recopie l'IMEI 1 de la boîte du téléphone." };
+  if (imeiLastDigit(digits.slice(0, 14)) !== digits[14]) return { message: "L'IMEI a 15 chiffres mais son contrôle est incorrect. Vérifie les chiffres sur la boîte (ou *#06# si allumé)." };
   return { message: "IMEI complet : 15 chiffres, contrôle valide." };
 }
 
@@ -226,14 +226,22 @@ export default function Products() {
             <p>Aucun produit trouvé. Ajoute ton premier article pour commencer.</p>
           </div>
         ) : (
-          <table className="catalog-table">
+          <table className="catalog-table catalog-table--products">
             <thead><tr><th>Produit</th><th>Prix d'achat</th><th>Prix de vente</th><th>Stock</th><th>Action</th></tr></thead>
             <tbody>{products.map((item) => (
               <tr key={item.id}>
-                <td><span className="catalog-itemname">{item.name}</span>{item.model ? <span className="catalog-ref">{[item.brand, item.model, item.condition === 'used' ? 'Occasion' : 'Neuf'].filter(Boolean).join(' · ')}</span> : null}</td>
-                <td className="catalog-number">{xof(item.purchase_price)}</td>
-                <td className="catalog-number">{xof(item.sale_price)}</td>
-                <td><span className={'catalog-stock ' + (item.low_stock ? 'low' : '')}>{item.quantity} unité(s)</span></td>
+                <td className="catalog-product-cell">
+                  <div className="catalog-product-heading">
+                    <span className="catalog-product-icon" aria-hidden="true">{item.category === 'phone' ? <Smartphone size={19}/> : <Boxes size={19}/>}</span>
+                    <div className="catalog-product-text">
+                      <span className="catalog-itemname">{item.name}</span>
+                      {item.model ? <span className="catalog-ref">{[item.brand, item.model, item.condition === 'used' ? 'Occasion' : 'Neuf'].filter(Boolean).join(' · ')}</span> : null}
+                    </div>
+                  </div>
+                </td>
+                <td className="catalog-number"><span className="catalog-mobile-label">Prix d'achat</span><strong>{xof(item.purchase_price)}</strong></td>
+                <td className="catalog-number"><span className="catalog-mobile-label">Prix de vente</span><strong>{xof(item.sale_price)}</strong></td>
+                <td className="catalog-stock-cell"><span className="catalog-mobile-label">Disponibilité</span><span className={'catalog-stock ' + (item.low_stock ? 'low' : '')}>{item.quantity} unité(s)</span></td>
                 <td><div className="catalog-row-actions">
                   <button className="catalog-action" onClick={() => void openDetails(item)}><Eye size={14}/> Détails</button>
                   <button className="catalog-action" onClick={() => openEdit(item)}><Pencil size={14}/> Modifier</button>
@@ -355,7 +363,7 @@ export default function Products() {
                     <div className="catalog-field">
                       <label htmlFor="product-imeis"><Barcode size={15} style={{ verticalAlign: 'middle' }}/> IMEI (facultatif maintenant)</label>
                       <textarea id="product-imeis" value={form.imeis} onChange={(e) => update('imeis', e.target.value)} placeholder="Un IMEI principal par ligne"/>
-                      <small>L'IMEI complet apparaît avec *#06# sur le téléphone. Il est possible de créer le modèle sans IMEI, mais le stock restera à zéro jusqu'à son ajout.</small>
+                      <small><strong>Téléphone neuf ou éteint :</strong> lis ou scanne les 15 chiffres de l'IMEI 1 sur l'étiquette de la boîte, sans allumer l'appareil. Ne confonds pas IMEI et numéro de série. Si le téléphone est allumé, tu peux aussi composer *#06#. La fiche peut être créée sans IMEI, mais son stock restera à zéro.</small>
                       {imeiHint(form.imeis) && <div className="catalog-imei-guide">
                         <span>{imeiHint(form.imeis)?.message}</span>
                         {imeiHint(form.imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => update('imeis', imeiHint(form.imeis)!.suggested!)}>Compléter les 15 chiffres</button>}
@@ -371,7 +379,7 @@ export default function Products() {
                 <div className="catalog-field">
                   <label htmlFor="batch-imeis">IMEI des téléphones *</label>
                   <textarea id="batch-imeis" autoFocus required value={imeis} onChange={(e) => setImeis(e.target.value)} placeholder="Un IMEI par ligne"/>
-                  <small><Barcode size={13}/> Pour connaître l'IMEI complet, compose *#06#. Le second IMEI est facultatif et se sépare par une virgule.</small>
+                  <small><Barcode size={13}/> <strong>Pour un téléphone neuf et éteint :</strong> scanne le code-barres « IMEI 1 » sur la boîte ou saisis les 15 chiffres imprimés. Aucun allumage nécessaire. Second IMEI facultatif, séparé par une virgule. Si allumé : *#06#.</small>
                   {imeiHint(imeis) && <div className="catalog-imei-guide">
                     <span>{imeiHint(imeis)?.message}</span>
                     {imeiHint(imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => setImeis(imeiHint(imeis)!.suggested!)}>Compléter les 15 chiffres</button>}

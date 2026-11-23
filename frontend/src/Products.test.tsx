@@ -106,6 +106,27 @@ describe('PhoneStock - catalogue', () => {
     });
   });
 
+  it('prépare les cartes produit mobiles et permet de lire les IMEI sur une boîte éteinte', async () => {
+    const product = {
+      id: 'phone-card', name: 'Téléphone', category: 'phone', sku: '', brand: 'Samsung',
+      model: 'Galaxy A17', condition: 'new', purchase_price: '85000', sale_price: '95000',
+      quantity: 1, low_stock_threshold: 3, low_stock: true,
+    };
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true, json: async () => ({ results: [product] }),
+    })));
+    render(<Products/>);
+    expect(await screen.findByText('Samsung · Galaxy A17 · Neuf')).toBeTruthy();
+    const table = document.querySelector('.catalog-table--products');
+    expect(table).not.toBeNull();
+    expect(table?.querySelectorAll('.catalog-mobile-label').length).toBe(3);
+    expect(screen.getByRole('button', { name: 'Détails' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Modifier' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter un téléphone' }));
+    expect(screen.getByText(/Téléphone neuf ou éteint/)).toBeTruthy();
+    expect(screen.getByText(/sans allumer l'appareil/)).toBeTruthy();
+  });
+
   it('explique un IMEI incomplet et propose le dernier chiffre calculé', async () => {
     render(<Products/>);
     await screen.findByText(/Aucun produit trouvé/);

@@ -73,6 +73,7 @@ class StockMovement(models.Model):
         OPENING = "opening", "Stock initial"
         ADJUSTMENT = "adjustment", "Correction manuelle"
         IMEI_ADDITION = "imei", "Enregistrement IMEI"
+        PURCHASE = "purchase", "Achat fournisseur"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="movements")
@@ -95,3 +96,41 @@ class ProductEditEvent(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+
+class Supplier(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=160)
+    normalized_name = models.CharField(max_length=160, unique=True)
+    phone = models.CharField(max_length=30, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class PurchaseReceipt(models.Model):
+    """Immutable receipt. Unique client_ref guarantees retry idempotency."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    client_ref = models.UUIDField(unique=True)
+    payload_hash = models.CharField(max_length=64)
+    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="purchases")
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class PurchaseLine(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    receipt = models.ForeignKey(PurchaseReceipt, on_delete=models.PROTECT, related_name="lines")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="purchase_lines")
+    quantity = models.PositiveIntegerField()
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+    phone_imeis = models.JSONField(default=list)

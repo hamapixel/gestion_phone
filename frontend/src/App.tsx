@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Products from './Products';
+import Purchases from './Purchases';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -119,7 +120,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 03 · PRODUITS & STOCK</span>
+            <div><span className="tag">PHASE 04 · ACHATS FOURNISSEURS</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
@@ -127,6 +128,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
           </div>
           {page === 'products' ? (
             <Products />
+          ) : page === 'purchases' ? (
+            <Purchases />
           ) : page === 'dashboard' ? (
             <>
               <section className="hero">
@@ -156,7 +159,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 03 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 04 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

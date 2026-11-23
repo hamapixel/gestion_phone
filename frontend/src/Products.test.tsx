@@ -21,7 +21,7 @@ describe('PhoneStock - catalogue', () => {
     await screen.findByText(/Aucun produit trouvé/);
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter un article' }));
     fireEvent.change(screen.getByLabelText('Nom du produit *'), { target: { value: 'Pochette Samsung' } });
-    fireEvent.change(screen.getByLabelText('Prix d'achat (FCFA)'), { target: { value: '1000' } });
+    fireEvent.change(screen.getByLabelText("Prix d'achat (FCFA)"), { target: { value: '1000' } });
     fireEvent.change(screen.getByLabelText('Prix de vente (FCFA)'), { target: { value: '2500' } });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
     await waitFor(() => {

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Barcode, Boxes, Plus, Search, Smartphone, X } from 'lucide-react';
+import { Barcode, Boxes, Eye, Pencil, Plus, Search, Smartphone, X } from 'lucide-react';
 
 type Category = 'phone' | 'case' | 'other';
 type Product = {
@@ -10,10 +10,26 @@ type Product = {
 type Dialog =
   | { type: 'new'; kind: 'phone' | 'other' }
   | { type: 'imeis'; product: Product }
-  | { type: 'stock'; product: Product };
+  | { type: 'stock'; product: Product }
+  | { type: 'edit'; product: Product }
+  | { type: 'details'; product: Product };
 type NewForm = {
   name: string; brand: string; model: string; condition: 'new' | 'used'; purchase_price: string; sale_price: string; quantity: string; imeis: string;
 };
+type ProductDetail = {
+  product: Product;
+  phones: { id: string; sold: boolean; imeis: { slot: number; imei: string }[] }[];
+  movements: { delta: number; reason: string; note: string; created_at: string }[];
+  changes: { changes: Record<string, { avant: string; apres: string }>; created_at: string }[];
+  phones_truncated: boolean;
+};
+const propertyLabels: Record<string,string> = {
+  name: 'Nom', brand: 'Marque', model: 'Modèle', condition: 'État',
+  purchase_price: 'Prix d’achat', sale_price: 'Prix de vente', low_stock_threshold: 'Seuil d’alerte'
+};
+function isPhoneForm(dialog: Dialog): boolean {
+  return dialog.type === 'new' ? dialog.kind === 'phone' : dialog.type === 'edit' && dialog.product.category === 'phone';
+}
 const fresh: NewForm = {
   name: '', brand: '', model: '', condition: 'new', purchase_price: '', sale_price: '', quantity: '0', imeis: '',
 };
@@ -79,6 +95,8 @@ export default function Products() {
   const [delta, setDelta] = useState('');
   const [reason, setReason] = useState('');
   const [imeis, setImeis] = useState('');
+  const [detail, setDetail] = useState<ProductDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -109,13 +127,36 @@ export default function Products() {
   function openNew(kind: 'phone' | 'other') {
     setForm({ ...fresh, name: kind === 'phone' ? 'Téléphone' : '' }); setError(''); setDialog({ type: 'new', kind });
   }
+  function openEdit(product: Product) {
+    setError('');
+    setDetail(null);
+    setForm({
+      name: product.name, brand: product.brand, model: product.model,
+      condition: product.condition, purchase_price: product.purchase_price,
+      sale_price: product.sale_price, quantity: String(product.quantity), imeis: '',
+    });
+    setDialog({ type: 'edit', product });
+  }
+  async function openDetails(product: Product) {
+    setDialog({ type: 'details', product }); setError(''); setDetail(null);
+    setDetailLoading(true);
+    try {
+      const response = await fetch('/api/products/' + product.id + '/', { credentials: 'same-origin' });
+      const result = await parseResponse(response) as ProductDetail;
+      setDetail(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Détails indisponibles.');
+    } finally {
+      setDetailLoading(false);
+    }
+  }
   function openAction(type: 'stock' | 'imeis', product: Product) {
     setDelta(''); setReason(''); setImeis(''); setError('');
     setDialog({ type, product });
   }
-  async function apiPost(url: string, body: object) {
+  async function apiPost(url: string, body: object, method: 'POST' | 'PATCH' = 'POST') {
     return parseResponse(await fetch(url, {
-      method: 'POST', credentials: 'same-origin',
+      method, credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfCookie() },
       body: JSON.stringify(body),
     }));
@@ -138,6 +179,13 @@ export default function Products() {
           low_stock_threshold: 3,
           phones: dialog.kind === 'phone' ? phonesFromText(form.imeis) : [],
         });
+      } else if (dialog.type === 'edit') {
+        await apiPost('/api/products/' + dialog.product.id + '/', {
+          name: form.name, brand: isPhoneForm(dialog) ? form.brand : '',
+          model: isPhoneForm(dialog) ? form.model : '',
+          condition: isPhoneForm(dialog) ? form.condition : 'new',
+          purchase_price: form.purchase_price, sale_price: form.sale_price,
+        }, 'PATCH');
       } else if (dialog.type === 'imeis') {
         const phones = phonesFromText(imeis);
         if (!phones.length) throw new Error('Scanne ou saisis au moins un IMEI.');
@@ -186,9 +234,13 @@ export default function Products() {
                 <td className="catalog-number">{xof(item.purchase_price)}</td>
                 <td className="catalog-number">{xof(item.sale_price)}</td>
                 <td><span className={'catalog-stock ' + (item.low_stock ? 'low' : '')}>{item.quantity} unité(s)</span></td>
-                <td><button className="catalog-action" onClick={() => openAction(item.category === 'phone' ? 'imeis' : 'stock', item)}>
-                  {item.category === 'phone' ? 'Ajouter IMEI' : 'Corriger stock'}
-                </button></td>
+                <td><div className="catalog-row-actions">
+                  <button className="catalog-action" onClick={() => void openDetails(item)}><Eye size={14}/> Détails</button>
+                  <button className="catalog-action" onClick={() => openEdit(item)}><Pencil size={14}/> Modifier</button>
+                  <button className="catalog-action" onClick={() => openAction(item.category === 'phone' ? 'imeis' : 'stock', item)}>
+                    {item.category === 'phone' ? 'Ajouter IMEI' : 'Corriger stock'}
+                  </button>
+                </div></td>
               </tr>
             ))}</tbody>
           </table>
@@ -198,21 +250,81 @@ export default function Products() {
         <div className="catalog-backdrop" role="presentation">
           <section className="catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
             <div className="catalog-modal-header">
-              <div><h3 id="catalog-title">{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Ajouter un téléphone' : 'Ajouter un article') : dialog.type === 'imeis' ? 'Ajouter des téléphones' : 'Corriger le stock'}</h3>
-                <p>{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Nom, marque, modèle et état, sans référence ni catégorie.' : 'Pochette, chargeur ou autre article : saisie rapide.') : dialog.product.name}</p>
+              <div><h3 id="catalog-title">{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Ajouter un téléphone' : 'Ajouter un article') : dialog.type === 'edit' ? 'Modifier le produit' : dialog.type === 'details' ? 'Détails du produit' : dialog.type === 'imeis' ? 'Ajouter des téléphones' : 'Corriger le stock'}</h3>
+                <p>{dialog.type === 'new' ? (dialog.kind === 'phone' ? 'Nom, marque, modèle et état, sans référence ni catégorie.' : 'Pochette, chargeur ou autre article : saisie rapide.') : dialog.type === 'edit' ? 'Modifier les informations sans toucher au stock ni aux IMEI.' : dialog.product.name}</p>
               </div>
               <button className="catalog-close" aria-label="Fermer" onClick={() => setDialog(null)}><X size={19}/></button>
             </div>
+            {dialog.type === 'details' ? (
+              <div className="catalog-details">
+                {detailLoading && <p>Chargement des informations…</p>}
+                {error && <p className="catalog-error" role="alert">{error}</p>}
+                {detail && (
+                  <>
+                    <div className="catalog-detail-list">
+                      <div><span>Produit</span><strong>{detail.product.name}</strong></div>
+                      {detail.product.category === 'phone' && (
+                        <>
+                          <div><span>Marque</span><strong>{detail.product.brand}</strong></div>
+                          <div><span>Modèle</span><strong>{detail.product.model}</strong></div>
+                          <div><span>État</span><strong>{detail.product.condition === 'used' ? 'Occasion' : 'Neuf'}</strong></div>
+                        </>
+                      )}
+                      <div><span>Prix d'achat</span><strong>{xof(detail.product.purchase_price)}</strong></div>
+                      <div><span>Prix de vente</span><strong>{xof(detail.product.sale_price)}</strong></div>
+                      <div><span>Stock disponible</span><strong>{detail.product.quantity} unité(s)</strong></div>
+                    </div>
+                    {detail.product.category === 'phone' && (
+                      <section className="catalog-detail-section">
+                        <h4>Téléphones enregistrés et IMEI</h4>
+                        {detail.phones.length ? detail.phones.map((phone) => (
+                          <div className="catalog-imei-row" key={phone.id}>
+                            <span>{phone.sold ? 'Vendu' : 'En stock'}</span>
+                            <strong>{phone.imeis.map((item) => 'IMEI ' + item.slot + ' : ' + item.imei).join(' · ')}</strong>
+                          </div>
+                        )) : <p>Aucun téléphone identifié pour ce modèle.</p>}
+                        {detail.phones_truncated && <p>Seuls les 200 téléphones les plus récents sont affichés.</p>}
+                      </section>
+                    )}
+                    <section className="catalog-detail-section">
+                      <h4>Historique du stock</h4>
+                      {detail.movements.length ? detail.movements.map((movement, index) => (
+                        <div className="catalog-history-row" key={index}>
+                          <span>{new Date(movement.created_at).toLocaleDateString('fr-FR')} · {movement.reason}</span>
+                          <strong>{movement.delta > 0 ? '+' : ''}{movement.delta}</strong>
+                          {movement.note && <small>{movement.note}</small>}
+                        </div>
+                      )) : <p>Aucun mouvement enregistré.</p>}
+                    </section>
+                    <section className="catalog-detail-section">
+                      <h4>Modifications du produit</h4>
+                      {detail.changes.length ? detail.changes.map((event, index) => (
+                        <div className="catalog-history-row" key={index}>
+                          <span>{new Date(event.created_at).toLocaleString('fr-FR')}</span>
+                          {Object.entries(event.changes).map(([field, diff]) => (
+                            <small key={field}>{propertyLabels[field] || field} : {diff.avant} → {diff.apres}</small>
+                          ))}
+                        </div>
+                      )) : <p>Pas encore de modifications enregistrées.</p>}
+                    </section>
+                    <div className="catalog-form-footer">
+                      <button className="catalog-cancel" onClick={() => setDialog(null)}>Fermer</button>
+                      <button className="catalog-primary" onClick={() => openEdit(detail.product)}><Pencil size={15}/> Modifier</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
             <form className="catalog-form" onSubmit={submit}>
-              {dialog.type === 'new' ? (
+              {(dialog.type === 'new' || dialog.type === 'edit') ? (
                 <>
                   <div className="catalog-field">
                     <label htmlFor="product-name">Nom du produit *</label>
                     <input id="product-name" autoFocus required maxLength={160} value={form.name}
                       onChange={(e) => update('name', e.target.value)}
-                      placeholder={dialog.kind === 'phone' ? 'Ex. Téléphone' : 'Ex. Pochette Samsung A17'}/>
+                      placeholder={isPhoneForm(dialog) ? 'Ex. Téléphone' : 'Ex. Pochette Samsung A17'}/>
                   </div>
-                  {dialog.kind === 'phone' && (
+                  {isPhoneForm(dialog) && (
                     <>
                       <div className="catalog-fields">
                         <div className="catalog-field">
@@ -239,7 +351,7 @@ export default function Products() {
                     <div className="catalog-field"><label htmlFor="product-cost">Prix d'achat (FCFA)</label><input id="product-cost" type="number" min="0" step=".01" required value={form.purchase_price} onChange={(e) => update('purchase_price', e.target.value)}/></div>
                     <div className="catalog-field"><label htmlFor="product-price">Prix de vente (FCFA)</label><input id="product-price" type="number" min=".01" step=".01" required value={form.sale_price} onChange={(e) => update('sale_price', e.target.value)}/></div>
                   </div>
-                  {dialog.kind === 'phone' ? (
+                  {isPhoneForm(dialog) && dialog.type === 'new' ? (
                     <div className="catalog-field">
                       <label htmlFor="product-imeis"><Barcode size={15} style={{ verticalAlign: 'middle' }}/> IMEI (facultatif maintenant)</label>
                       <textarea id="product-imeis" value={form.imeis} onChange={(e) => update('imeis', e.target.value)} placeholder="Un IMEI principal par ligne"/>
@@ -249,8 +361,10 @@ export default function Products() {
                         {imeiHint(form.imeis)?.suggested && <button type="button" className="catalog-action" onClick={() => update('imeis', imeiHint(form.imeis)!.suggested!)}>Compléter les 15 chiffres</button>}
                       </div>}
                     </div>
-                  ) : (
+                  ) : dialog.type === 'new' ? (
                     <div className="catalog-field"><label htmlFor="product-qty">Quantité initiale</label><input id="product-qty" type="number" min="0" max="1000000" step="1" value={form.quantity} onChange={(e) => update('quantity', e.target.value)}/></div>
+                  ) : (
+                    <p className="catalog-edit-note">Pour modifier le stock, utilise le bouton « Corriger stock » ou « Ajouter IMEI ».</p>
                   )}
                 </>
               ) : dialog.type === 'imeis' ? (
@@ -282,6 +396,7 @@ export default function Products() {
                 <button type="submit" className="catalog-primary" disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</button>
               </div>
             </form>
+            )}
           </section>
         </div>
       )}

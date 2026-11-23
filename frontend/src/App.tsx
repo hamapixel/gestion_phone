@@ -8,6 +8,8 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import Products from './Products';
 import Purchases from './Purchases';
+import Checkout from './Checkout';
+import Debts from './Debts';
 
 type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
@@ -28,8 +30,8 @@ const nav: NavItem[] = [
 const goals = [
   { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Accès sécurisé actif' },
   { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
-  { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes' },
-  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Phases 06–07 · Suivi des paiements' },
+  { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes actives' },
+  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Suivi des créances actif · Factures Phase 06' },
 ];
 
 const preferredTheme = (): boolean => {
@@ -120,16 +122,20 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 04 · ACHATS FOURNISSEURS</span>
+            <div><span className="tag">PHASE 05 · CAISSE INTELLIGENTE</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
               <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
-            <span className="phase-pill"><CheckCircle2 size={15}/> Catalogue actif</span>
+            <span className="phase-pill"><CheckCircle2 size={15}/> Caisse active</span>
           </div>
           {page === 'products' ? (
             <Products />
+          ) : page === 'checkout' ? (
+            <Checkout />
           ) : page === 'purchases' ? (
             <Purchases />
+          ) : page === 'debts' ? (
+            <Debts />
           ) : page === 'dashboard' ? (
             <>
               <section className="hero">
@@ -159,7 +165,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 04 — Développement local</footer>
+        <footer>© PhoneStock Pro · Phase 05 — Développement local</footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

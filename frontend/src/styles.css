@@ -357,3 +357,164 @@ html, body, #root {
     flex: 1 1 100%;
   }
 }
+
+
+/* Phase 05 — caisse rapide et panier intelligent, cartes sans défilement latéral. */
+.pos-page { min-width: 0; max-width: 100%; display: grid; gap: 20px; }
+.pos-page *, .pos-page *::before, .pos-page *::after { min-width: 0; }
+.pos-page button, .pos-page input, .pos-page select { max-width: 100%; }
+.pos-success { display: flex; gap: 13px; align-items: center; flex-wrap: wrap; border: 1px solid #a8e6bf; background: #e7f8ec; color: #19623c; padding: 17px; border-radius: 14px; }
+.pos-success > div { flex: 1; }
+.pos-success strong { font-size: 14px; }.pos-success p { font-size: 12px; margin: 7px 0; }.pos-success small { font-size: 11px; }
+.pos-new-button { background: #fff; color: #19623c; padding: 10px 14px; border-radius: 9px; border: 1px solid #b2e5c7; font-size: 12px; font-weight: 750; }
+.pos-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 11px; }
+.pos-stats>div { display: grid; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 13px; padding: 15px; }
+.pos-stats span { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.pos-stats strong { font-size: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pos-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(320px,370px); gap: 17px; align-items: start; }
+.pos-products,.pos-cart,.pos-recent { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; padding: 17px; min-width: 0; }
+.pos-section-title { margin-bottom: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pos-section-title h3 { margin: 0; font-size: 16px; }.pos-section-title span { font-size: 11px; color: var(--muted); }
+.pos-search { margin-bottom: 16px; }.pos-search input { width: 100%; }
+.pos-product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.pos-product-card { display: flex; flex-direction: column; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: 13px; min-width: 0; background: var(--surface); overflow-wrap: anywhere; }
+.pos-product-top,.pos-product-bottom { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+.pos-product-icon { height: 37px; width: 37px; border-radius: 11px; background: var(--bg); border: 1px solid var(--border); color: var(--blue); display: grid; place-items: center; flex-shrink: 0; }
+.pos-stock-pill { border-radius: 999px; color: #19784a; background: #e3f9ed; font-size: 10px; padding: 6px 8px; text-align: center; white-space: nowrap; }
+.pos-stock-pill.empty { color: #a65b15; background: #fff1db; }
+.pos-product-card>strong { line-height: 1.6; font-size: 12px; }
+.pos-product-card>small { font-size: 10px; color: var(--muted); }
+.pos-product-bottom { margin-top: auto; flex-wrap: wrap; }
+.pos-product-bottom b { font-size: 13px; overflow-wrap: anywhere; }
+.pos-product-bottom button { display: flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 9px; background: #2563eb; color: white; font-size: 11px; font-weight: 750; padding: 9px 11px; }
+.pos-product-bottom button:disabled { background: #abb9ce; cursor: not-allowed; }
+.pos-cart { position: sticky; top: 95px; display: grid; gap: 13px; }
+.pos-cart-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pos-cart-heading h3 { display: flex; gap: 8px; align-items: center; font-size: 16px; margin: 0; }
+.pos-cart-heading h3 span { color: var(--muted); font-size: 10px; font-weight: 500; }
+.pos-cart-heading>span { color: var(--muted); font-size: 10px; }
+.pos-empty-cart { color: var(--muted); font-size: 12px; line-height: 1.75; padding: 24px 10px; margin: 0; text-align: center; }
+.pos-cart-lines { display: grid; gap: 10px; max-height: 330px; overflow-y: auto; scrollbar-width: none; }
+.pos-cart-lines::-webkit-scrollbar { display:none; }
+.pos-cart-line { border: 1px solid var(--border); border-radius: 11px; padding: 11px; display: grid; gap: 12px; min-width: 0; }
+.pos-cart-line-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.pos-cart-line-title div { display: grid; gap: 4px; }
+.pos-cart-line-title strong { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.pos-cart-line-title small { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.pos-cart-line-title button { flex-shrink: 0; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 8px; background: var(--bg); color: var(--ink); }
+.pos-cart-line-bottom { display: flex; align-items: end; justify-content: space-between; gap: 8px; }
+.pos-qty { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.pos-qty button { display: grid; place-items: center; border: 0; background: var(--bg); color: var(--ink); width: 32px; height: 35px; }
+.pos-qty button:disabled { opacity:.35; }.pos-qty span { text-align: center; width: 30px; font-size: 12px; font-weight: 750; }
+.pos-qty-fixed { font-size: 11px; color: var(--muted); }
+.pos-price { display: grid; gap: 4px; font-size: 10px; color: var(--muted); max-width: 132px; flex: 1; }
+.pos-price input { width: 100%; height: 35px; border: 1px solid var(--border); border-radius: 8px; padding: 4px 7px; color: var(--ink); background: var(--surface); font: inherit; font-size: 12px; }
+.pos-pay-form { display: grid; gap: 13px; }
+.pos-total,.pos-balance { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 13px; background: var(--bg); border-radius: 10px; }
+.pos-total span,.pos-balance span { font-size: 11px; color: var(--muted); }.pos-total strong { font-size: 20px; }.pos-balance strong { font-size: 14px; color: var(--ink); }
+.pos-pay-modes { display: flex; gap: 6px; }
+.pos-pay-modes button { flex: 1; padding: 10px 4px; background: var(--surface); color: var(--muted); border: 1px solid var(--border); border-radius: 9px; font-size: 11px; font-weight: 700; }
+.pos-pay-modes button.selected { background: #e7efff; color: #205bcb; border-color: #a7c5ff; }
+.pos-payment-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.pos-payment-fields label,.pos-credit-fields label { display: grid; gap: 7px; font-size: 11px; font-weight: 700; color: var(--ink); }
+.pos-payment-fields input,.pos-payment-fields select,.pos-credit-fields input { min-height: 40px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; padding: 8px 9px; width: 100%; }
+.pos-payment-fields input:disabled { opacity: 1; background: var(--bg); }
+.pos-credit-fields { display: grid; gap: 10px; padding: 12px; border: 1px solid #f6dbac; border-radius: 11px; background: var(--bg); }
+.pos-credit-fields>strong { font-size: 12px; color: #b26d14; }.pos-credit-fields small { color: var(--muted); font-size: 10px; line-height: 1.7; }
+.pos-error { border: 1px solid #f9c1c1; color: #b02f2f; background: #fff0f0; border-radius: 9px; font-size: 12px; padding: 11px; line-height: 1.6; }
+.pos-submit { background: #2563eb; color: #fff; border: 0; border-radius: 11px; padding: 13px; font-size: 13px; font-weight: 800; min-height: 46px; }
+.pos-submit:disabled { opacity: .5; cursor: not-allowed; }
+.pos-recent { display: grid; gap: 13px; }.pos-recent h3 { font-size: 15px; margin: 0; }.pos-recent>p { font-size: 12px; color: var(--muted); }
+.pos-recent-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.pos-recent-card { display: flex; justify-content: space-between; gap: 9px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 11px; flex-wrap: wrap; }
+.pos-recent-card>div { display: grid; gap: 5px; }.pos-recent-card strong { font-size: 12px; }.pos-recent-card small { color: var(--muted); font-size: 10px; }
+.pos-phone-modal { width: min(100%, 455px); }
+:root[data-theme="dark"] .pos-stock-pill { background: #1c4332; color: #8eeab5; }
+:root[data-theme="dark"] .pos-stock-pill.empty { background: #4b361a; color: #ffda94; }
+:root[data-theme="dark"] .pos-pay-modes button.selected { background: #294471; color: #c5d9ff; border-color: #587bb3; }
+:root[data-theme="dark"] .pos-success { background: #173d2c; color: #a7f0c2; border-color: #23563b; }
+:root[data-theme="dark"] .pos-new-button { background: #1d4934; color: #b4fbd0; border-color: #387a52; }
+:root[data-theme="dark"] .pos-error { background: #4e2526; border-color: #88414a; color: #ffbebe; }
+@media(max-width:1200px) { .pos-layout { grid-template-columns: minmax(0,1fr) minmax(305px,350px); } .pos-product-grid { grid-template-columns: 1fr; } }
+@media(max-width:950px) { .pos-layout { grid-template-columns: minmax(0,1fr); }.pos-cart { position: static; }.pos-product-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.pos-stats { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:760px) {
+  .pos-page { gap: 13px; max-width: 100%; }
+  .pos-layout { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .pos-products,.pos-cart,.pos-recent { padding: 14px; }
+  .pos-product-grid { grid-template-columns: minmax(0,1fr); gap: 9px; }
+  .pos-product-card { padding: 13px; }
+  .pos-stats { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .pos-stats>div { padding: 11px; }.pos-stats strong { font-size: 14px; }
+  .pos-payment-fields { grid-template-columns: minmax(0,1fr); }
+  .pos-recent-list { grid-template-columns: minmax(0,1fr); }
+  .pos-pay-modes button { font-size: 10px; padding: 10px 2px; }
+}
+@media(max-width:350px) {
+  .pos-stats { grid-template-columns: minmax(0,1fr); }
+  .pos-total strong { font-size: 17px; }
+  .pos-cart-line-bottom { flex-wrap: wrap; }
+}
+
+
+/* Créances : cartes premium sur PC/tablette/mobile, sans débordement horizontal. */
+.debt-page { display: grid; gap: 16px; min-width: 0; max-width: 100%; }
+.debt-page * { min-width: 0; }
+.debt-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 11px; }
+.debt-summary article { display: grid; gap: 7px; padding: 15px 17px; background: var(--surface); border: 1px solid var(--border); border-radius: 13px; }
+.debt-summary span { font-size: 11px; color: var(--muted); }
+.debt-summary strong { font-size: 19px; color: var(--ink); overflow-wrap: anywhere; }
+.debt-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.debt-toolbar .catalog-search { flex: 1; }
+.debt-filters, .debt-modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.debt-filters button, .debt-modes button { border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-weight: 700; font-size: 11px; padding: 10px 13px; border-radius: 9px; }
+.debt-filters button.selected, .debt-modes button.selected { border-color: #80a8fa; background: #eaf1ff; color: #1b59cb; }
+.debt-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.debt-card { display: grid; align-content: start; gap: 15px; padding: 17px; background: var(--surface); border: 1px solid var(--border); border-radius: 15px; overflow-wrap: anywhere; }
+.debt-card-heading { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+.debt-card-heading h3 { margin: 0 0 5px; font-size: 15px; }.debt-card-heading span { font-size: 11px; color: var(--muted); }
+.debt-status { flex-shrink: 0; border-radius: 999px; padding: 7px 10px; background: #edf4ff; color: #245ac5 !important; font-size: 10px !important; font-weight: 800; }
+.debt-status.overdue { background: #fff0e7; color: #ae4c21 !important; }
+.debt-status.paid { background: #e8f7ef; color: #17804b !important; }
+.debt-values { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.debt-values div { display: grid; gap: 5px; padding: 10px; background: var(--bg); border-radius: 9px; }
+.debt-values span { font-size: 10px; color: var(--muted); }
+.debt-values strong { font-size: 12px; color: var(--ink); overflow-wrap: anywhere; }
+.debt-values .debt-due strong { color: #e06d23; }
+.debt-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.debt-payments { border-top: 1px solid var(--border); padding-top: 12px; }
+.debt-payments summary { color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+.debt-payment-line { display: flex; justify-content: space-between; gap: 8px; padding: 11px 0 2px; font-size: 11px; border-bottom: 1px solid var(--border); }
+.debt-payment-line span { color: var(--muted); }
+.debt-payment-line strong { color: var(--ink); text-align: right; }
+.debt-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.debt-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: 1; padding: 10px 13px; border-radius: 9px; font-weight: 750; font-size: 11px; min-height: 40px; }
+.debt-pay { border: 0; color: white; background: #2563eb; }
+.debt-remind { border: 1px solid var(--border); color: var(--ink); background: var(--surface); }
+.debt-empty { display: grid; justify-items: center; gap: 12px; padding: 40px 15px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 15px; color: var(--muted); }
+.debt-empty p { margin: 0; font-size: 14px; }.debt-empty small { font-size: 11px; }
+.debt-notice { display: flex; gap: 9px; align-items: center; padding: 13px; border-radius: 10px; background: #e3f7ea; color: #166d3f; font-size: 12px; }
+.debt-modal { width: min(100%,520px); }
+.debt-remaining,.debt-after { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; border-radius: 10px; padding: 12px; background: var(--bg); }
+.debt-remaining span,.debt-after span { font-size: 11px; color: var(--muted); }
+.debt-remaining strong { font-size: 19px; }.debt-after strong { font-size: 14px; }
+.debt-modes button { flex: 1 1 auto; }
+:root[data-theme="dark"] .debt-status { background: #203b6a; color: #b6d5ff !important; }
+:root[data-theme="dark"] .debt-status.overdue { background: #5b3c20; color: #ffcb9b !important; }
+:root[data-theme="dark"] .debt-status.paid { background: #1f4837; color: #a7e9c0 !important; }
+:root[data-theme="dark"] .debt-filters button.selected, :root[data-theme="dark"] .debt-modes button.selected { background: #203b6a; color: #c9dfff; }
+:root[data-theme="dark"] .debt-notice { background: #1b4832; color: #b8f0c4; }
+@media(max-width:1000px) { .debt-grid { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:760px) {
+  .debt-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  .debt-summary article:first-child { grid-column: 1 / -1; }
+  .debt-summary strong { font-size: 17px; }
+  .debt-toolbar { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; }
+  .debt-toolbar .catalog-search { min-width: 0; }
+  .debt-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .debt-filters button { width: 100%; }
+  .debt-values { gap: 5px; }.debt-values strong { font-size: 11px; }
+  .debt-card { padding: 13px; }
+  .debt-card-heading { flex-wrap: wrap; }
+  .debt-payment-line { flex-wrap: wrap; }
+}
+@media(max-width:340px) { .debt-values { grid-template-columns: minmax(0,1fr); } }

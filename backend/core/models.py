@@ -74,6 +74,7 @@ class StockMovement(models.Model):
         ADJUSTMENT = "adjustment", "Correction manuelle"
         IMEI_ADDITION = "imei", "Enregistrement IMEI"
         PURCHASE = "purchase", "Achat fournisseur"
+        SALE = "sale", "Vente en caisse"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="movements")
@@ -134,3 +135,77 @@ class PurchaseLine(models.Model):
     unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
     total = models.DecimalField(max_digits=15, decimal_places=2)
     phone_imeis = models.JSONField(default=list)
+
+
+
+class Sale(models.Model):
+    """Single-owner sale, immutable totals and request identity."""
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Espèces"
+        ORANGE = "orange", "Orange Money"
+        MOOV = "moov", "Moov Money"
+        TRANSFER = "transfer", "Virement"
+
+    class Status(models.TextChoices):
+        PAID = "paid", "Payée"
+        CREDIT = "credit", "Créance à recevoir"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    client_ref = models.UUIDField(unique=True)
+    payload_hash = models.CharField(max_length=64)
+    owner = models.ForeignKey("auth.User", on_delete=models.PROTECT, related_name="store_sales")
+    customer_name = models.CharField(max_length=160, blank=True)
+    customer_phone = models.CharField(max_length=30, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    method = models.CharField(max_length=10, choices=PaymentMethod.choices)
+    status = models.CharField(max_length=8, choices=Status.choices)
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+    cost_total = models.DecimalField(max_digits=15, decimal_places=2)
+    gross_profit = models.DecimalField(max_digits=15, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=15, decimal_places=2)
+    balance = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class SaleLine(models.Model):
+    """Snapshot of price and cost at sale time; one physical phone per phone line."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sale = models.ForeignKey(Sale, on_delete=models.PROTECT, related_name="lines")
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="sale_lines")
+    product_name = models.CharField(max_length=160)
+    product_brand = models.CharField(max_length=70, blank=True)
+    product_model = models.CharField(max_length=70, blank=True)
+    product_condition = models.CharField(max_length=4, default="new")
+    phone_unit = models.ForeignKey(
+        PhoneUnit, on_delete=models.PROTECT, related_name="sale_lines",
+        null=True, blank=True,
+    )
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    line_total = models.DecimalField(max_digits=15, decimal_places=2)
+    line_cost = models.DecimalField(max_digits=15, decimal_places=2)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["phone_unit"], condition=Q(phone_unit__isnull=False),
+                name="one_sale_per_phone_unit",
+            ),
+        ]
+
+
+class SalePayment(models.Model):
+    """Initial collection; future debt repayments use this payment ledger."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sale = models.ForeignKey(Sale, on_delete=models.PROTECT, related_name="payments")
+    client_ref = models.UUIDField(unique=True, null=True, blank=True)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    method = models.CharField(max_length=10, choices=Sale.PaymentMethod.choices)
+    created_at = models.DateTimeField(auto_now_add=True)

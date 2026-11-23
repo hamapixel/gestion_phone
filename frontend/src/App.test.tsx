@@ -27,6 +27,11 @@ describe('PhoneStock Pro - phase 01', () => {
     expect(screen.getByText('MODULE EN PRÉPARATION')).toBeTruthy();
   });
 
+  it('n’affiche aucun module de gestion des utilisateurs', () => {
+    render(<App/>);
+    expect(screen.queryByRole('button', { name: 'Utilisateurs' })).toBeNull();
+  });
+
   it('permet de changer le thème et mémorise le choix', () => {
     render(<App/>);
     fireEvent.click(screen.getByRole('button', { name: 'Changer le thème' }));

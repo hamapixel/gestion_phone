@@ -15,7 +15,7 @@ const formatXof = (v: string | number) => new Intl.NumberFormat('fr-FR').format(
 
 function csrfCookie() {
   const token = document.cookie.split('; ').find((part) => part.startsWith('csrftoken='));
-  return token ? decodeURIComponent(token.substring(9)) : '';
+  return token ? decodeURIComponent(token.substring('csrftoken='.length)) : '';
 }
 function newId(): string {
   return crypto.randomUUID();

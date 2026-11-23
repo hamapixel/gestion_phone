@@ -155,6 +155,68 @@ class CatalogTests(TestCase):
         url = reverse("product-stock", args=[response.json()["product"]["id"]])
         self.assertEqual(self.post_json(url, {"delta": 2, "reason": "test"}).status_code, 400)
 
+    def test_detail_shows_phone_imeis_and_stock_history(self):
+        imei = valid_imei("49015420323751")
+        response = self.create_phone([{"imei": imei}])
+        self.assertEqual(response.status_code, 201)
+        pk = response.json()["product"]["id"]
+        detail = self.client.get(reverse("product-detail", args=[pk]))
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["phones"][0]["imeis"][0]["imei"], imei)
+        self.assertEqual(detail.json()["product"]["quantity"], 1)
+        self.assertEqual(detail.json()["movements"][0]["delta"], 1)
+
+    def test_edit_price_and_name_keep_stock_and_audit_change(self):
+        response = self.create_case()
+        pk = response.json()["product"]["id"]
+        edit = self.client.patch(
+            reverse("product-detail", args=[pk]),
+            json.dumps({"name": "Coque A15", "purchase_price": "1400", "sale_price": "3100"}),
+            content_type="application/json",
+        )
+        self.assertEqual(edit.status_code, 200, edit.content)
+        self.assertTrue(edit.json()["updated"])
+        self.assertEqual(edit.json()["product"]["quantity"], 15)
+        detail = self.client.get(reverse("product-detail", args=[pk])).json()
+        self.assertEqual(detail["product"]["name"], "Coque A15")
+        self.assertEqual(len(detail["changes"]), 1)
+        self.assertEqual(detail["changes"][0]["changes"]["sale_price"]["avant"], "2500.00")
+        self.assertEqual(StockMovement.objects.count(), 1)
+
+    def test_edit_rejects_direct_stock_or_category_changes(self):
+        response = self.create_case()
+        pk = response.json()["product"]["id"]
+        url = reverse("product-detail", args=[pk])
+        for data in ({"quantity": 999}, {"category": "phone"}, {"imei": "12345"}):
+            denied = self.client.patch(url, json.dumps(data), content_type="application/json")
+            self.assertEqual(denied.status_code, 400)
+        self.assertEqual(Product.objects.get(pk=pk).quantity, 15)
+
+    def test_edit_phone_requires_brand_model_and_checks_prices(self):
+        response = self.create_phone()
+        pk = response.json()["product"]["id"]
+        url = reverse("product-detail", args=[pk])
+        for data in (
+            {"brand": ""}, {"model": ""}, {"sale_price": "-10"},
+            {"condition": "bad"}, {"low_stock_threshold": 99999},
+        ):
+            denied = self.client.patch(url, json.dumps(data), content_type="application/json")
+            self.assertEqual(denied.status_code, 400)
+        accepted = self.client.patch(
+            url, json.dumps({"brand": "Samsung", "model": "Galaxy A15", "condition": "used"}),
+            content_type="application/json",
+        )
+        self.assertEqual(accepted.status_code, 200)
+        self.assertEqual(accepted.json()["product"]["condition"], "used")
+
+    def test_anonymous_cannot_read_or_edit_product_detail(self):
+        response = self.create_case()
+        pk = response.json()["product"]["id"]
+        guest = Client()
+        url = reverse("product-detail", args=[pk])
+        self.assertEqual(guest.get(url).status_code, 401)
+        self.assertEqual(guest.patch(url, json.dumps({"name": "Hacked"}), content_type="application/json").status_code, 401)
+
     def test_csrf_is_enforced_on_write(self):
         browser = Client(enforce_csrf_checks=True)
         browser.force_login(self.owner)

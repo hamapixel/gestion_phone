@@ -83,3 +83,15 @@ class StockMovement(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+
+class ProductEditEvent(models.Model):
+    """Immutable audit event for editable product fields; no stock mutation."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="edit_events")
+    changes = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]

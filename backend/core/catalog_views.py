@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .auth_views import is_owner
-from .models import PhoneIdentifier, PhoneUnit, Product, StockMovement
+from .models import PhoneIdentifier, PhoneUnit, Product, StockMovement, ProductEditEvent
 
 MAX_STOCK = 1_000_000
 MAX_BODY = 65536
@@ -241,3 +241,83 @@ def adjust_stock(request, product_id):
     except (ValueError, TypeError) as exc:
         return JsonResponse({"detail": str(exc)}, status=400)
     return JsonResponse({"product": product_data(product)})
+
+
+@require_http_methods(["GET", "PATCH"])
+@owner_only
+def product_detail(request, product_id):
+    """Details and safe field updates; stock and IMEIs cannot change via this route."""
+    try:
+        if request.method == "GET":
+            product = Product.objects.get(pk=product_id)
+            units = []
+            if product.category == Product.Category.PHONE:
+                for unit in product.phone_units.prefetch_related("identifiers").order_by("-created_at")[:200]:
+                    units.append({
+                        "id": str(unit.pk), "sold": unit.sold,
+                        "imeis": [
+                            {"slot": entry.slot, "imei": entry.imei}
+                            for entry in sorted(unit.identifiers.all(), key=lambda item: item.slot)
+                        ],
+                    })
+            movements = [
+                {"delta": m.delta, "reason": m.get_reason_display(), "note": m.note,
+                 "created_at": m.created_at.isoformat()}
+                for m in product.movements.order_by("-created_at")[:50]
+            ]
+            changes = [
+                {"changes": event.changes, "created_at": event.created_at.isoformat()}
+                for event in product.edit_events.order_by("-created_at")[:20]
+            ]
+            return JsonResponse({
+                "product": product_data(product), "phones": units,
+                "movements": movements, "changes": changes,
+                "phones_truncated": product.category == Product.Category.PHONE and product.phone_units.count() > 200,
+            })
+
+        data = read_payload(request)
+        allowed = {
+            "name", "brand", "model", "condition",
+            "purchase_price", "sale_price", "low_stock_threshold",
+        }
+        if not data or set(data) - allowed:
+            raise ValueError("Modification invalide : stock, IMEI et catégorie sont gérés séparément.")
+
+        with transaction.atomic():
+            product = Product.objects.select_for_update().get(pk=product_id)
+            values = {}
+            for field, value in data.items():
+                if field == "name":
+                    values[field] = clean_text(value, "Nom", 160, required=True)
+                elif field == "brand":
+                    values[field] = clean_text(
+                        value, "Marque", 70, required=product.category == Product.Category.PHONE
+                    )
+                elif field == "model":
+                    values[field] = clean_text(
+                        value, "Modèle", 70, required=product.category == Product.Category.PHONE
+                    )
+                elif field == "condition":
+                    if value not in Product.Condition.values:
+                        raise ValueError("État invalide : Neuf ou Occasion.")
+                    values[field] = value
+                elif field == "purchase_price":
+                    values[field] = amount(value, "Prix d'achat", allow_zero=True)
+                elif field == "sale_price":
+                    values[field] = amount(value, "Prix de vente")
+                elif field == "low_stock_threshold":
+                    values[field] = number(value, "Seuil d'alerte", 1000)
+            differences = {}
+            for field, value in values.items():
+                old = getattr(product, field)
+                if old != value:
+                    differences[field] = {"avant": str(old), "apres": str(value)}
+                    setattr(product, field, value)
+            if differences:
+                product.save(update_fields=list(differences))
+                ProductEditEvent.objects.create(product=product, changes=differences)
+        return JsonResponse({"product": product_data(product), "updated": bool(differences)})
+    except Product.DoesNotExist:
+        return JsonResponse({"detail": "Produit introuvable."}, status=404)
+    except (ValueError, TypeError) as exc:
+        return JsonResponse({"detail": str(exc)}, status=400)

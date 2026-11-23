@@ -3,7 +3,7 @@ import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
   CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
   Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Wallet,
-  WifiOff, X,
+  WifiOff, LogOut, X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,7 +35,7 @@ const preferredTheme = (): boolean => {
   catch { return false; }
 };
 
-export default function App() {
+export default function App({ ownerName, onLogout }: { ownerName?: string; onLogout?: () => void }) {
   const [page, setPage] = useState<Page>('dashboard');
   const [dark, setDark] = useState(preferredTheme);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -108,7 +108,12 @@ export default function App() {
             </div>
             <button className="icon-btn" aria-label="Changer le thème" title="Mode jour/nuit" onClick={() => setDark((value) => !value)}>{dark ? <Sun size={20}/> : <Moon size={20}/>}</button>
             <button className="icon-btn" aria-label="Notifications" title="Notifications" onClick={() => navigate('notifications')}><Bell size={20}/></button>
-            <div className="avatar" aria-label="Profil de démonstration">PS</div>
+            {onLogout ? (
+              <button className="logout-button" title="Se déconnecter" aria-label="Se déconnecter" onClick={onLogout}>
+                <LogOut size={18}/><span>Déconnexion</span>
+              </button>
+            ) : null}
+            <div className="avatar" aria-label={ownerName ? 'Connecté : ' + ownerName : 'Profil de démonstration'}>PS</div>
           </div>
         </header>
         <main className="workspace">

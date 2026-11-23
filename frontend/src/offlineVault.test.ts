@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// Browser-only TS config intentionally omits @types/node; Vitest executes this test in Node.
+// @ts-ignore -- Node's built-in WebCrypto is available at test runtime.
 import { webcrypto } from 'node:crypto';
 import { deletePending, getDeviceRef, hasVault, listPending, lockVault,
   readCatalog, saveCatalog, savePending, unlockVault } from './offlineVault';

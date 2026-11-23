@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
   CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
-  Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Users, Wallet,
+  Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Wallet,
   WifiOff, X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings' | 'users';
+type Page = 'dashboard' | 'checkout' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
 type ApiState = 'connecting' | 'online' | 'offline';
 type NavItem = { id: Page; label: string; icon: LucideIcon; description: string };
 
 const nav: NavItem[] = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, description: 'Une vue simple de votre boutique.' },
+  { id: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard, description: 'Les informations essentielles de votre boutique.' },
   { id: 'checkout', label: 'Caisse', icon: ShoppingCart, description: 'Panier intelligent et vente rapide.' },
   { id: 'products', label: 'Produits & stock', icon: Boxes, description: 'Téléphones, pochettes et produits divers.' },
   { id: 'purchases', label: 'Achats & fournisseurs', icon: PackagePlus, description: 'Réapprovisionnements et gestion du stock.' },
@@ -21,11 +21,10 @@ const nav: NavItem[] = [
   { id: 'expenses', label: 'Dépenses', icon: ReceiptText, description: 'Suivi simple des charges.' },
   { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alertes et événements importants.' },
   { id: 'settings', label: 'Paramètres', icon: Settings2, description: 'Factures, préférences et apparence.' },
-  { id: 'users', label: 'Utilisateurs', icon: Users, description: 'Comptes et permissions.' },
 ];
 
 const goals = [
-  { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Comptes et boutiques' },
+  { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Compte unique du propriétaire' },
   { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
   { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes' },
   { icon: CreditCard, title: 'Factures & créances', subtitle: 'Phases 06–07 · Suivi des paiements' },
@@ -116,7 +115,7 @@ export default function App() {
           <div className="page-title">
             <div><span className="tag">PHASE 01 · FONDATIONS</span>
               <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
-              <p>{page === 'dashboard' ? 'Votre nouveau logiciel de gestion commence ici.' : selected.description}</p>
+              <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
             </div>
             <span className="phase-pill"><CheckCircle2 size={15}/> Socle de développement</span>
           </div>
@@ -124,7 +123,7 @@ export default function App() {
             <>
               <section className="hero">
                 <div className="hero-text">
-                  <span>SIMPLE · RAPIDE · MULTI-APPAREILS</span>
+                  <span>UN PROPRIÉTAIRE · PC ET TÉLÉPHONE</span>
                   <h3>Une boutique mieux organisée, <em>sans complexité.</em></h3>
                   <p>Téléphones, pochettes, ventes et créances dans une application élégante. Le socle est prêt : les fonctions commerciales seront ajoutées phase par phase.</p>
                   <button onClick={() => navigate('checkout')}>Découvrir la caisse <ChevronRight size={17}/></button>

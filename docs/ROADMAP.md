@@ -5,9 +5,9 @@
 - **Phase 03** : catalogue téléphones, IMEI individuels, pochettes, produits divers, stock initial et corrections tracées (achats fournisseurs en Phase 04).
 - **Phase 04** : achats fournisseurs multi-lignes, prix d'achat par ligne, réception du stock idempotente et journal des achats.
 - **Phase 05** : caisse rapide et panier intelligent, IMEI obligatoires pour téléphones, paiements complets ou partiels, clients identifiés pour crédit, historique et vente atomique/idempotente.
-- **Phase 06** : en-tête personnalisable versionné (nom, logo, coordonnées, NIF), factures de vente et reçus de versement imprimables A4/A5/80 mm, enregistrement PDF via impression navigateur.
+- **Phase 06** : en-tête global personnalisable (nom, logo, coordonnées, NIF) appliqué à toutes les factures et tous les reçus lors de leur consultation, y compris les anciens, factures de vente et reçus de versement imprimables A4/A5/80 mm, enregistrement PDF via impression navigateur.
 - **Phase 05 (complément)** : liste réelle des créances et encaissements partiels idempotents ; sans doubler le chiffre d'affaires.
-- **Phase 07** : relances WhatsApp, dépenses, rapports et notifications.
+- **Phase 07** : rapports journaliers/hebdomadaires/mensuels/annuels et périodes personnalisées, dépenses simples, résultat brut moins dépenses, alertes stocks et échéances calculées à l'ouverture, relances WhatsApp préremplies.
 - **Phase 08** : SQLite locale, synchronisation idempotente et gestion des conflits hors ligne.
 - **Phase 09** : Tauri Windows, Capacitor Android, activation sécurisée, distribution et sauvegarde.
 
@@ -18,7 +18,7 @@
 3. Une créance encaissée ne doit jamais doubler le chiffre d'affaires.
 4. Les unités de téléphone ont un IMEI unique et leur propre historique.
 5. La marge tient compte du coût historique du produit vendu.
-6. Les factures conservent leur en-tête d'origine même après changement du logo.
+6. Toutes les factures et tous les reçus affichent l'en-tête actuel de la boutique. Les données financières historiques restent inchangées, et les anciens PDF imprimés ne sont pas réécrits.
 7. Le stock vendu simultanément hors ligne requiert une stratégie explicite de réservation/conflit.
 8. Pas d'écrans prétendant enregistrer réellement des ventes avant implémentation du backend.
 

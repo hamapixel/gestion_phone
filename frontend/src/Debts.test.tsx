@@ -64,4 +64,21 @@ describe('PhoneStock — créances', () => {
       expect((call![1]!.headers as Record<string,string>)['X-CSRFToken']).toBe('debt-test-csrf');
     });
   });
+
+  it('prépare une relance WhatsApp polie ou ferme avant ouverture', async () => {
+    const open = vi.fn();
+    vi.stubGlobal('open', open);
+    render(<Debts/>);
+    await screen.findAllByText('Awa Coulibaly');
+    fireEvent.click(screen.getByRole('button', { name: 'Relancer WhatsApp' }));
+    expect(screen.getByRole('heading', { name: 'Relance WhatsApp' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ferme' }));
+    const message = screen.getByLabelText('Message à personnaliser') as HTMLTextAreaElement;
+    expect(message.value).toContain('régulariser');
+    fireEvent.change(message, { target: { value: 'Bonjour, merci de régler votre solde.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ouvrir WhatsApp' }));
+    expect(open).toHaveBeenCalledOnce();
+    expect(open.mock.calls[0][0]).toContain('https://wa.me/22375000000?text=');
+    expect(decodeURIComponent(open.mock.calls[0][0])).toContain('Bonjour, merci de régler votre solde.');
+  });
 });

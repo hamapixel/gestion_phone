@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from .models import Product, Sale, ShopBranding, ShopConfig
+from .models import Product, Sale, SalePayment, ShopBranding, ShopConfig
 
 
 class InvoiceTests(TestCase):
@@ -50,21 +50,55 @@ class InvoiceTests(TestCase):
         self.assertEqual(response.status_code, 201, response.content)
         return response.json()["sale"]
 
-    def test_shop_heading_updates_and_sales_keep_original_version(self):
+    def test_configured_heading_appears_on_all_old_and_new_invoices(self):
+        # A sale registered before shop personalization must use the current header.
+        before_config = self.create_sale()
         self.assertEqual(self.save_shop().status_code, 200)
         first = self.create_sale()
-        second_shop = self.save_shop(self.shop_data("Nouvelle Boutique"))
+        second_shop = self.save_shop(self.shop_data(
+            "Nouvelle Boutique", phone="74001122", address="Sikasso, Mali",
+            footer="À bientôt !",
+        ))
         self.assertTrue(second_shop.json()["updated"])
         second = self.create_sale()
-        old_doc = self.client.get(reverse("sale-invoice", args=[first["id"]])).json()
-        new_doc = self.client.get(reverse("sale-invoice", args=[second["id"]])).json()
-        self.assertEqual(old_doc["shop"]["name"], "Boutique Seydou")
-        self.assertEqual(new_doc["shop"]["name"], "Nouvelle Boutique")
-        self.assertNotEqual(old_doc["shop"]["id"], new_doc["shop"]["id"])
-        self.assertEqual(ShopBranding.objects.count(), 3)  # default + 2 versions
+        docs = [
+            self.client.get(reverse("sale-invoice", args=[item["id"]])).json()
+            for item in (before_config, first, second)
+        ]
+        current_id = second_shop.json()["shop"]["id"]
+        for doc in docs:
+            self.assertEqual(doc["shop"]["id"], current_id)
+            self.assertEqual(doc["shop"]["name"], "Nouvelle Boutique")
+            self.assertEqual(doc["shop"]["phone"], "74001122")
+            self.assertEqual(doc["shop"]["address"], "Sikasso, Mali")
+            self.assertEqual(doc["shop"]["footer"], "À bientôt !")
+            self.assertNotIn("gross_profit", doc["sale"])
+            self.assertNotIn("unit_cost", doc["sale"]["lines"][0])
+        # Historical versions are retained internally, without freezing the printed header.
+        self.assertEqual(ShopBranding.objects.count(), 3)
         self.assertEqual(ShopConfig.objects.get(pk=1).branding.name, "Nouvelle Boutique")
-        self.assertNotIn("gross_profit", old_doc["sale"])
-        self.assertNotIn("unit_cost", old_doc["sale"]["lines"][0])
+        original = Sale.objects.get(pk=first["id"])
+        self.assertEqual(original.branding.name, "Boutique Seydou")
+        self.assertEqual(docs[1]["sale"]["total"], first["total"])
+
+    def test_existing_payment_receipts_use_current_configured_header(self):
+        self.assertEqual(self.save_shop().status_code, 200)
+        old_sale = self.create_sale(amount="1000", credit=True)
+        initial_payment = SalePayment.objects.get(sale_id=old_sale["id"])
+        changed_logo = "data:image/png;base64," + base64.b64encode(
+            bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"new-logo"
+        ).decode()
+        changed = self.save_shop(self.shop_data(
+            name="Boutique Nouvelle", logo_data=changed_logo, phone="71234567"
+        ))
+        self.assertEqual(changed.status_code, 200, changed.content)
+        receipt = self.client.get(reverse("payment-receipt", args=[initial_payment.id]))
+        self.assertEqual(receipt.status_code, 200)
+        self.assertEqual(receipt.json()["shop"]["name"], "Boutique Nouvelle")
+        self.assertEqual(receipt.json()["shop"]["phone"], "71234567")
+        self.assertEqual(receipt.json()["shop"]["logo_data"], changed_logo)
+        self.assertEqual(receipt.json()["payment"]["amount"], "1000.00")
+        self.assertEqual(receipt.json()["sale"]["reference"], old_sale["reference"])
 
     def test_same_shop_information_does_not_create_version(self):
         response = self.save_shop(self.shop_data())

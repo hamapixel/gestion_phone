@@ -69,7 +69,7 @@ export default function ShopSettings() {
       const result = await response.json() as { shop?: Shop; detail?: string };
       if (!response.ok || !result.shop) throw new Error(result.detail || 'Enregistrement impossible.');
       setForm(result.shop);
-      setSaved('En-tête enregistré. Les anciennes factures conservent leur version précédente.');
+      setSaved('En-tête enregistré. Toutes les factures et tous les reçus, anciens et nouveaux, utiliseront cet en-tête lors de leur prochaine impression.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement impossible.');
     } finally {
@@ -90,7 +90,7 @@ export default function ShopSettings() {
       <div className="shop-form-card">
         <div className="shop-heading"><Settings2 size={21}/>
           <div><h3>En-tête des factures</h3>
-            <p>Personnalise tes factures, sans modifier les anciennes.</p></div>
+            <p>Le même en-tête apparaît sur toutes les factures et tous les reçus, même anciens.</p></div>
         </div>
         {loading ? <p className="catalog-empty">Chargement des paramètres…</p> : (
           <form className="catalog-form" onSubmit={save}>

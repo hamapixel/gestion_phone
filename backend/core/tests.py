@@ -10,7 +10,10 @@ class HealthEndpointTests(SimpleTestCase):
     def test_post_is_disallowed(self):
         self.assertEqual(self.client.post(reverse("health")).status_code, 405)
 
-    def test_meta_labels_unimplemented_modules(self):
+    def test_meta_labels_active_modules(self):
         response = self.client.get(reverse("meta"))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["modules"]["sales"], "planned")
+        self.assertEqual(response.json()["modules"]["sales"], "ready")
+        self.assertEqual(response.json()["modules"]["reports"], "ready")
+        self.assertEqual(response.json()["modules"]["expenses"], "ready")
+        self.assertEqual(response.json()["modules"]["notifications"], "ready")

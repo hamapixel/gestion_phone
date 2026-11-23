@@ -4,7 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Exists, OuterRef
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
@@ -41,14 +41,6 @@ def debt_data(sale):
     }
 
 
-def debt_queryset():
-    # A sale becomes a debt only if it had a balance at creation, even once settled.
-    # Full-payment sales have no customer/debt history and do not belong to this list.
-    return Sale.objects.filter(
-        Q(status=Sale.Status.CREDIT) | Q(total__gt=0, customer_name__gt="", customer_phone__gt="", payments__client_ref__isnull=False)
-    ).distinct()
-
-
 @require_GET
 @owner_only
 def debts(request):
@@ -58,14 +50,13 @@ def debts(request):
         return JsonResponse({"detail": "Filtre invalide."}, status=400)
     # Payment updates mark a fully reimbursed credit as PAID. Keep those in the debt history
     # by their originating credit metadata, not by their latest payment method.
-    base = Sale.objects.filter(customer_name__gt="", customer_phone__gt="").filter(
-        Q(balance__gt=0) | Q(payments__client_ref__isnull=False)
-    ).distinct()
+    repayment = SalePayment.objects.filter(sale_id=OuterRef("pk"), client_ref__isnull=False)
+    base = Sale.objects.filter(customer_name__gt="", customer_phone__gt="").annotate(
+        has_repayment=Exists(repayment)
+    ).filter(Q(balance__gt=0) | Q(has_repayment=True))
     if query:
         base = base.filter(
-            Q(customer_name__icontains=query) |
-            Q(customer_phone__icontains=query) |
-            Q(id__in=[s.id for s in base if query.casefold() in ("VTE-" + s.pk.hex[:10]).casefold()])
+            Q(customer_name__icontains=query) | Q(customer_phone__icontains=query)
         )
     counts = base.aggregate(outstanding=Sum("balance"))
     outstanding = counts["outstanding"] or Decimal("0.00")

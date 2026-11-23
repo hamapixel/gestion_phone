@@ -133,3 +133,21 @@ footer { text-align: center; padding: 12px 15px 25px; color: var(--muted); font-
 /* Aide à la saisie IMEI : jamais de correction silencieuse. */
 .catalog-imei-guide { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); color: var(--ink); border-radius: 10px; font-size: 11px; line-height: 1.65; }
 .catalog-imei-guide .catalog-action { color: var(--blue); }
+
+/* Fiche produit et édition — boutons directs et historique lisible. */
+.catalog-row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.catalog-row-actions .catalog-action { display: inline-flex; align-items: center; gap: 6px; }
+.catalog-details { display: grid; gap: 16px; }
+.catalog-detail-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.catalog-detail-list > div { display: grid; gap: 6px; padding: 11px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+.catalog-detail-list span { color: var(--muted); font-size: 11px; }
+.catalog-detail-list strong { font-size: 12px; overflow-wrap: anywhere; }
+.catalog-detail-section { border-top: 1px solid var(--border); padding-top: 14px; display: grid; gap: 8px; }
+.catalog-detail-section h4 { margin: 0 0 5px; font-size: 13px; }
+.catalog-detail-section p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.catalog-imei-row,.catalog-history-row { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; display: grid; gap: 5px; overflow-wrap: anywhere; }
+.catalog-imei-row span,.catalog-history-row span { color: var(--muted); font-size: 11px; }
+.catalog-imei-row strong,.catalog-history-row strong { font-size: 12px; }
+.catalog-history-row small { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.catalog-edit-note { margin: 0; padding: 10px 12px; border-radius: 9px; background: var(--bg); color: var(--muted); font-size: 11px; line-height: 1.6; }
+@media(max-width: 480px) { .catalog-detail-list { grid-template-columns: 1fr; } }

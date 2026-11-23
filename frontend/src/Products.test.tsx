@@ -41,7 +41,9 @@ describe('PhoneStock - catalogue', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter un téléphone' }));
     expect(screen.queryByLabelText('Catégorie')).toBeNull();
     expect(screen.queryByLabelText(/Référence/)).toBeNull();
-    fireEvent.change(screen.getByLabelText('Nom du produit *'), { target: { value: 'Samsung' } });
+    fireEvent.change(screen.getByLabelText('Nom du produit *'), { target: { value: 'Téléphone' } });
+    fireEvent.change(screen.getByLabelText('Marque *'), { target: { value: 'Samsung' } });
+    fireEvent.change(screen.getByLabelText('État *'), { target: { value: 'used' } });
     fireEvent.change(screen.getByLabelText('Modèle *'), { target: { value: 'Galaxy A17, 128 Go' } });
     fireEvent.change(screen.getByLabelText("Prix d'achat (FCFA)"), { target: { value: '85000' } });
     fireEvent.change(screen.getByLabelText('Prix de vente (FCFA)'), { target: { value: '95000' } });
@@ -50,12 +52,27 @@ describe('PhoneStock - catalogue', () => {
       const call = vi.mocked(fetch).mock.calls.find(([url, opts]) => url === '/api/products/' && opts?.method === 'POST');
       expect(call).toBeTruthy();
       const body = JSON.parse(call![1]!.body as string);
-      expect(body.name).toBe('Samsung');
+      expect(body.name).toBe('Téléphone');
+      expect(body.brand).toBe('Samsung');
+      expect(body.condition).toBe('used');
       expect(body.model).toBe('Galaxy A17, 128 Go');
       expect(body.category).toBe('phone');
       expect(body.phones).toEqual([]);
       expect(body.sku).toBeUndefined();
-      expect(body.brand).toBeUndefined();
     });
+  });
+
+  it('explique un IMEI incomplet et propose le dernier chiffre calculé', async () => {
+    render(<Products/>);
+    await screen.findByText(/Aucun produit trouvé/);
+    fireEvent.click(screen.getByRole('button', { name: 'Ajouter un téléphone' }));
+    fireEvent.change(screen.getByLabelText('IMEI (facultatif maintenant)'), {
+      target: { value: '49015420323751' },
+    });
+    expect(screen.getByText(/14 chiffres saisis/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Compléter les 15 chiffres' }));
+    expect((screen.getByLabelText('IMEI (facultatif maintenant)') as HTMLTextAreaElement).value)
+      .toBe('490154203237518');
+    expect(screen.getByText(/contrôle valide/)).toBeTruthy();
   });
 });

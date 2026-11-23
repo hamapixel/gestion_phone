@@ -81,3 +81,13 @@ Depuis **Caisse > Dernières ventes** ou après une vente, cliquer **Facture** ;
 ### Liste des paiements de créances
 
 En bas de la page « Créances », une section **Liste des paiements de créances** montre directement les 100 derniers acomptes initiaux et remboursements des ventes à crédit, avec client, référence, date, moyen de paiement, montant et bouton Reçu. Elle reste visible après paiement complet, indépendamment du filtre En cours/Payées, et suit la recherche du client. Le chiffre d’affaires n’est jamais additionné une deuxième fois lors d’un remboursement. Les cartes s’adaptent aux téléphones.
+
+## Phase 07 — Rapports, dépenses et alertes
+
+**Rapports :** Aujourd'hui, semaine, mois, année ou période. Distingue chiffre d'affaires, encaissements à la date réelle du paiement, coût des marchandises vendues, marge brute, dépenses, résultat indicatif et sommes encore dues. Liste des marchandises vendues et chronologie par jour. Impression navigateur possible.
+
+**Dépenses :** formulaire bref Motif / Montant / Date / Note facultative, historique et calcul du total par période. Enregistrement UUID idempotent, accès propriétaire uniquement, sans suppression des anciennes opérations. Les achats pour stock restent dans « Achats & fournisseurs » : sinon le coût serait compté deux fois.
+
+**Notifications :** alertes calculées à l'ouverture ou par clic sur Actualiser (stock faible ou épuisé, créances en retard ou arrivant dans les trois jours). Aucun envoi en tâche de fond pour l'instant.
+
+**Relances WhatsApp :** depuis Créances, choisir un texte poli ou ferme, le modifier, puis cliquer « Ouvrir WhatsApp ». Le logiciel n'envoie pas le message automatiquement.

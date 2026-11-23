@@ -733,3 +733,10 @@ html, body, #root {
   .phase7-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .phase7-kpi,.phase7-product-card,.phase7-day { break-inside:avoid; page-break-inside:avoid; }
 }
+
+/* Relance WhatsApp préparée par le commerçant, jamais envoyée automatiquement */
+.debt-reminder-modal { width:min(100%,530px); }
+.debt-reminder-modal .debt-modes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.debt-reminder-modal .debt-modes button { width:100%; }
+.debt-reminder-modal textarea { width:100%; max-width:100%; resize:vertical; }
+.debt-reminder-note { margin:0; line-height:1.6; font-size:11px; color:var(--muted); }

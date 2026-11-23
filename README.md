@@ -48,3 +48,14 @@ Voir [docs/ROADMAP.md](docs/ROADMAP.md).
 ## Phase 04 : achats fournisseurs
 
 Dans « Achats & fournisseurs », clique sur « Nouvel achat », saisis le fournisseur, ajoute des produits et les quantités achetées. Les téléphones exigent un IMEI réel par unité. Valider la réception augmente le stock et conserve les coûts des lignes et l'historique. Une référence unique protège contre les doubles validations en cas de réessai réseau.
+
+## Si le navigateur affiche une ancienne phase (Windows / Docker)
+
+Avec Docker Desktop sous Windows, les modifications Git peuvent ne pas déclencher le rechargement à chaud de Vite. Le mode polling est activé dans `frontend/vite.config.ts`. Après un `git pull`, pour reconstruire le serveur web sans toucher à PostgreSQL :
+
+~~~powershell
+docker compose up -d --force-recreate --no-deps frontend
+docker compose logs --tail 25 frontend
+~~~
+
+Attendre dans les journaux le message `VITE ... ready`, puis ouvrir `http://localhost:5178` et faire `Ctrl + Shift + R`. Tester éventuellement dans une fenêtre privée. **Ne pas exécuter `docker compose down -v` : cette commande détruirait les volumes PostgreSQL.**

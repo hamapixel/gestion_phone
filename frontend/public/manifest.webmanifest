@@ -1,0 +1,19 @@
+{
+  "name": "PhoneStock Pro — Gestion de boutique",
+  "short_name": "PhoneStock",
+  "description": "Gestion des ventes et stock du propriétaire, avec brouillons hors connexion chiffrés.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101c32",
+  "theme_color": "#101c32",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

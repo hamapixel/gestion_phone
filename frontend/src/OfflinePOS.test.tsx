@@ -54,4 +54,44 @@ describe('Caisse hors ligne', () => {
     });
     expect(await screen.findByText(/Vente sauvegardée localement et chiffrée/)).toBeTruthy();
   });
+
+  it('n’envoie la file qu’avec une session propriétaire et la même référence persistée', async () => {
+    document.cookie = 'csrftoken=offline-test-token; path=/';
+    const id = '00000000-0000-4000-8000-000000000008';
+    const draft: storage.PendingSale = {
+      id, status: 'pending', created_at: '2026-11-23T10:00:00Z', error: '',
+      payload: {
+        client_ref: id, origin: 'offline',
+        device_ref: '11111111-1111-4111-8111-111111111111',
+        lines: [{ product_id: 'p1', quantity: 1, unit_price: '2500.00', imei: '' }],
+        amount_paid: '2500.00', method: 'cash', customer_name: '',
+        customer_phone: '', due_date: null,
+      },
+    };
+    vi.mocked(storage.listPending).mockResolvedValueOnce([draft]).mockResolvedValueOnce([]);
+    vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/auth/csrf/') return { ok: true, json: async () => ({ status: 'ok' }) };
+      if (url === '/api/auth/session/') return { ok: true, json: async () => ({ authenticated: true }) };
+      if (url === '/api/sales/' && options?.method === 'POST') {
+        return { ok: true, status: 201, json: async () => ({
+          sale: { id: 'confirmed-1', reference: 'VTE-00001' },
+        }) };
+      }
+      throw new Error('Unexpected route: ' + url);
+    }));
+    render(<OfflinePOS/>);
+    expect(await screen.findByText('En attente de validation')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser les ventes' }));
+    await waitFor(() => {
+      const post = vi.mocked(fetch).mock.calls.find(([url, options]) =>
+        url === '/api/sales/' && options?.method === 'POST'
+      );
+      expect(post).toBeTruthy();
+      expect(JSON.parse(post![1]!.body as string).client_ref).toBe(id);
+      expect((post![1]!.headers as Record<string, string>)['X-CSRFToken']).toBe('offline-test-token');
+      expect(storage.deletePending).toHaveBeenCalledWith(id);
+    });
+    expect(await screen.findByText(/1 vente\(s\) confirmée\(s\) par Django/)).toBeTruthy();
+  });
+
 });

@@ -73,9 +73,12 @@ async function putRecord(id: string, data: unknown) {
   const db = await database();
   try {
     await new Promise<void>((resolve, reject) => {
-      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).put(data, id);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(new Error('Enregistrement local impossible. Vérifie l’espace disponible.'));
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(data, id);
+      // Wait for durable transaction commit, not merely the put request's success.
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(new Error('Enregistrement local interrompu. Vérifie l’espace disponible.'));
+      tx.onerror = () => reject(new Error('Enregistrement local impossible.'));
     });
   } finally { db.close(); }
 }
@@ -83,9 +86,11 @@ async function removeRecord(id: string) {
   const db = await database();
   try {
     await new Promise<void>((resolve, reject) => {
-      const req = db.transaction(STORE, 'readwrite').objectStore(STORE).delete(id);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(new Error('Suppression locale impossible.'));
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(new Error('Suppression locale interrompue.'));
+      tx.onerror = () => reject(new Error('Suppression locale impossible.'));
     });
   } finally { db.close(); }
 }
@@ -107,15 +112,21 @@ async function deriveKey(passphrase: string, salt: Uint8Array) {
     base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
   );
 }
-async function seal<T>(key: CryptoKey, value: T): Promise<Envelope> {
+async function seal<T>(key: CryptoKey, value: T, recordId: string): Promise<Envelope> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const bytes = enc.encode(JSON.stringify(value));
-  const result = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes);
+  const result = await crypto.subtle.encrypt({
+    name: 'AES-GCM', iv, additionalData: enc.encode(recordId),
+  }, key, bytes);
   return { version: 1, iv: base64(iv), ciphertext: base64(new Uint8Array(result)) };
 }
-async function unseal<T>(key: CryptoKey, envelope: Envelope): Promise<T> {
+async function unseal<T>(key: CryptoKey, envelope: Envelope, recordId: string): Promise<T> {
   const bytes = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: unbase64(envelope.iv) as BufferSource },
+    {
+      name: 'AES-GCM',
+      iv: unbase64(envelope.iv) as BufferSource,
+      additionalData: enc.encode(recordId) as BufferSource,
+    },
     key, unbase64(envelope.ciphertext) as BufferSource
   );
   return JSON.parse(dec.decode(bytes)) as T;
@@ -132,7 +143,7 @@ export async function unlockVault(passphrase: string) {
   if (config) {
     try {
       const key = await deriveKey(passphrase, unbase64(config.salt));
-      const proof = await unseal<{ marker: string }>(key, config.proof);
+      const proof = await unseal<{ marker: string }>(key, config.proof, 'config-proof');
       if (proof.marker !== 'phonestock-offline-v1') throw new Error('Code incorrect.');
       vaultKey = key;
     } catch {
@@ -142,7 +153,7 @@ export async function unlockVault(passphrase: string) {
   } else {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const key = await deriveKey(passphrase, salt);
-    const proof = await seal(key, { marker: 'phonestock-offline-v1' });
+    const proof = await seal(key, { marker: 'phonestock-offline-v1' }, 'config-proof');
     await putRecord('config', {
       version: 1, salt: base64(salt), proof, device_ref: crypto.randomUUID(),
     } satisfies VaultConfig);
@@ -154,21 +165,21 @@ function requireKey(): CryptoKey {
   return vaultKey;
 }
 export async function saveCatalog(snapshot: CatalogSnapshot) {
-  await putRecord('catalog', await seal(requireKey(), snapshot));
+  await putRecord('catalog', await seal(requireKey(), snapshot, 'catalog'));
 }
 export async function readCatalog(): Promise<CatalogSnapshot | null> {
   const item = await getRecord<Envelope>('catalog');
-  return item ? unseal<CatalogSnapshot>(requireKey(), item) : null;
+  return item ? unseal<CatalogSnapshot>(requireKey(), item, 'catalog') : null;
 }
 export async function savePending(sale: PendingSale) {
   if (sale.id !== sale.payload.client_ref) throw new Error('Référence de vente incohérente.');
-  await putRecord('sale:' + sale.id, await seal(requireKey(), sale));
+  await putRecord('sale:' + sale.id, await seal(requireKey(), sale, 'sale:' + sale.id));
 }
 export async function listPending(): Promise<PendingSale[]> {
   const keys = (await listKeys()).filter((key) => typeof key === 'string' && key.startsWith('sale:'));
   const result = await Promise.all(keys.map(async (key) => {
     const item = await getRecord<Envelope>(String(key));
-    return item ? unseal<PendingSale>(requireKey(), item) : null;
+    return item ? unseal<PendingSale>(requireKey(), item, String(key)) : null;
   }));
   return result.filter((sale): sale is PendingSale => Boolean(sale))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));

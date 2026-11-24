@@ -1,6 +1,7 @@
 from django.urls import path
 from core.views import health, meta
 from core.auth_views import csrf_token, owner_session, owner_login, owner_logout
+from core.profile_views import owner_profile, owner_password
 from core.catalog_views import products, add_imei, adjust_stock, product_detail
 from core.purchase_views import suppliers, purchases
 from core.sale_views import sales, sale_detail
@@ -15,6 +16,8 @@ urlpatterns = [
     path("api/auth/session/", owner_session, name="auth-session"),
     path("api/auth/login/", owner_login, name="auth-login"),
     path("api/auth/logout/", owner_logout, name="auth-logout"),
+    path("api/account/profile/", owner_profile, name="owner-profile"),
+    path("api/account/password/", owner_password, name="owner-password"),
     path("api/products/", products, name="products"),
     path("api/suppliers/", suppliers, name="suppliers"),
     path("api/purchases/", purchases, name="purchases"),

@@ -29,6 +29,21 @@ const ITERATIONS = 260_000;
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 let vaultKey: CryptoKey | null = null;
+let nativeUnlocked = false;
+const native = () => typeof window !== 'undefined' && Boolean(window.__TAURI__?.core?.invoke);
+function invoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  if (!native()) throw new Error('Ce stockage requiert YaraPhone Windows.');
+  return window.__TAURI__!.core.invoke<T>(command, args);
+}
+export function setNativeVaultState(value: boolean) {
+  if (native()) nativeUnlocked = value;
+}
+export async function lockNativeVault() {
+  if (!native()) throw new Error('Application native indisponible.');
+  await invoke('native_lock');
+  nativeUnlocked = false;
+}
+
 
 function base64(bytes: Uint8Array) {
   // The encryption envelope contains binary data, never raw UTF-8 text.
@@ -131,12 +146,28 @@ async function unseal<T>(key: CryptoKey, envelope: Envelope, recordId: string): 
   );
   return JSON.parse(dec.decode(bytes)) as T;
 }
-export function isUnlocked() { return vaultKey !== null; }
-export function lockVault() { vaultKey = null; }
+export function isUnlocked() { return native() ? nativeUnlocked : vaultKey !== null; }
+export function lockVault() {
+  if (native()) {
+    // UI native uses lockNativeVault() so the Rust command is awaited.
+    nativeUnlocked = false;
+    void invoke('native_lock').catch(() => {});
+  } else vaultKey = null;
+}
 export async function hasVault() {
+  if (native()) {
+    const state = await invoke<{ initialized: boolean }>('native_vault_status');
+    return state.initialized;
+  }
   return Boolean(await getRecord<VaultConfig>('config'));
 }
 export async function unlockVault(passphrase: string) {
+  if (native()) {
+    const state = await invoke<{ unlocked: boolean }>('native_unlock', { passphrase });
+    nativeUnlocked = state.unlocked;
+    if (!nativeUnlocked) throw new Error('Le coffre Windows reste verrouillé.');
+    return;
+  }
   secureCrypto();
   if (passphrase.length < 8) throw new Error('Utilise une phrase secrète d’au moins 8 caractères.');
   const config = await getRecord<VaultConfig>('config');
@@ -165,17 +196,37 @@ function requireKey(): CryptoKey {
   return vaultKey;
 }
 export async function saveCatalog(snapshot: CatalogSnapshot) {
+  if (native()) {
+    await invoke('native_save_catalog', { payloadJson: JSON.stringify(snapshot) });
+    return;
+  }
   await putRecord('catalog', await seal(requireKey(), snapshot, 'catalog'));
 }
 export async function readCatalog(): Promise<CatalogSnapshot | null> {
+  if (native()) {
+    const value = await invoke<string | null>('native_read_catalog');
+    return value ? JSON.parse(value) as CatalogSnapshot : null;
+  }
   const item = await getRecord<Envelope>('catalog');
   return item ? unseal<CatalogSnapshot>(requireKey(), item, 'catalog') : null;
 }
 export async function savePending(sale: PendingSale) {
   if (sale.id !== sale.payload.client_ref) throw new Error('Référence de vente incohérente.');
+  if (native()) {
+    if (sale.status !== 'pending') throw new Error('Les conflits natifs seront gérés après activation de la synchronisation.');
+    await invoke('native_save_draft', { clientRef: sale.id, payloadJson: JSON.stringify(sale.payload) });
+    return;
+  }
   await putRecord('sale:' + sale.id, await seal(requireKey(), sale, 'sale:' + sale.id));
 }
 export async function listPending(): Promise<PendingSale[]> {
+  if (native()) {
+    const drafts = await invoke<{ client_ref: string; created_at: string; payload_json: string }[]>('native_list_drafts');
+    return drafts.map((item): PendingSale => ({
+      id: item.client_ref, payload: JSON.parse(item.payload_json) as OfflineSalePayload,
+      created_at: item.created_at, status: 'pending', error: '',
+    }));
+  }
   const keys = (await listKeys()).filter((key) => typeof key === 'string' && key.startsWith('sale:'));
   const result = await Promise.all(keys.map(async (key) => {
     const item = await getRecord<Envelope>(String(key));
@@ -185,6 +236,10 @@ export async function listPending(): Promise<PendingSale[]> {
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 }
 export async function deletePending(id: string) {
+  if (native()) {
+    await invoke('native_delete_draft', { clientRef: id });
+    return;
+  }
   requireKey();
   await removeRecord('sale:' + id);
 }
@@ -192,6 +247,7 @@ export async function deletePending(id: string) {
 
 /** Stable opaque device identifier, only used for authorized sale audit. */
 export async function getDeviceRef() {
+  if (native()) return invoke<string>('native_device_ref');
   requireKey();
   const config = await getRecord<VaultConfig>('config');
   if (!config) throw new Error('Configuration du coffre introuvable.');

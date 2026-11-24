@@ -42,7 +42,7 @@ describe('Tableau de bord et chiffres réels', () => {
     expect(await screen.findAllByText('100 000 FCFA')).toBeTruthy();
     expect(screen.getByText('Encaissements réels')).toBeTruthy();
     expect(screen.getByText('75 000 FCFA')).toBeTruthy();
-    expect(screen.getByText('20 000 FCFA')).toBeTruthy();
+    expect(screen.getAllByText('20 000 FCFA').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('23 000 FCFA')).toBeTruthy();
     // Encaissement de la période (75 000) is NOT necessarily what was settled
     // on sales of the period (80 000). The two measures are kept separate.

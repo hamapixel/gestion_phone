@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
 describe('PhoneStock Pro - phase 01', () => {
@@ -42,6 +42,39 @@ describe('PhoneStock Pro - phase 01', () => {
     render(<App/>);
     await screen.findByText('API connectée');
     expect(screen.queryByRole('button', { name: 'Utilisateurs' })).toBeNull();
+  });
+
+  it('personnalise immédiatement tout le logiciel après modification du nom de boutique', async () => {
+    const initial = {
+      id: 'branding-1', name: 'YaraPhone', logo_data: '',
+      phone: '', email: '', address: '', tax_id: '', footer: '',
+    };
+    vi.stubGlobal('fetch', vi.fn(async (url: string, options?: RequestInit) => {
+      if (url === '/api/shop/' && options?.method === 'PUT') {
+        const edited = JSON.parse(options.body as string);
+        return { ok: true, json: async () => ({ shop: { ...initial, ...edited, id: 'branding-2' }, updated: true }) };
+      }
+      if (url === '/api/shop/') return { ok: true, json: async () => ({ shop: initial }) };
+      if (url === '/api/health/') return { ok: true, json: async () => ({ status: 'ok' }) };
+      throw new Error('Unexpected URL: ' + url);
+    }));
+    render(<App/>);
+    expect(await screen.findByText('Bienvenue dans YaraPhone')).toBeTruthy();
+    expect(document.title).toBe('YaraPhone · Gestion de boutique');
+    expect(screen.getByTitle('YaraPhone')).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Paramètres' })[0]);
+    fireEvent.change(await screen.findByLabelText('Nom de la boutique *'), {
+      target: { value: 'YaraPhone Premium' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer l’identité de ma boutique' }));
+    await waitFor(() => {
+      expect(screen.getByTitle('YaraPhone Premium')).toBeTruthy();
+      expect(document.title).toBe('YaraPhone Premium · Gestion de boutique');
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Tableau de bord' })[0]);
+    expect(await screen.findByText('Bienvenue dans YaraPhone Premium')).toBeTruthy();
+    expect(screen.getByText(/Propulsé par PhoneStock Pro/)).toBeTruthy();
   });
 
   it('permet de changer le thème et mémorise le choix', async () => {

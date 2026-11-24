@@ -91,8 +91,10 @@ describe('PhoneStock Pro - phase 01', () => {
     }));
     render(<App/>);
     expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeTruthy();
-    expect(document.title).toBe('YaraPhone · Gestion de boutique');
-    expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(2);
+    await waitFor(() => {
+      expect(document.title).toBe('YaraPhone · Gestion de boutique');
+      expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(2);
+    });
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Paramètres' })[0]);
     fireEvent.change(await screen.findByLabelText('Nom de la boutique *'), {

@@ -143,7 +143,7 @@ export default function OfflinePOS({ standalone = false, onBack }: {
         category: p.category, condition: p.condition, quantity: p.quantity, sale_price: p.sale_price,
       })) });
       await refresh();
-      setMessage(data.results.length + ' articles copiés et chiffrés. Les stocks sont indicatifs hors ligne.');
+      setMessage('Catalogue prêt · ' + data.results.length + ' articles chiffrés.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Mise à jour impossible.');
     } finally { setBusy(false); }
@@ -182,7 +182,7 @@ export default function OfflinePOS({ standalone = false, onBack }: {
       });
       setCart([]); setPayMode('all'); setOtherAmount('');
       setCustomerName(''); setCustomerPhone(''); setDueDate('');
-      setMessage('Vente sauvegardée localement et chiffrée, EN ATTENTE de validation serveur. Ne délivre pas de facture définitive.');
+      setMessage('Vente sauvegardée localement et chiffrée · En attente de validation serveur.');
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement local impossible.');
@@ -232,15 +232,13 @@ export default function OfflinePOS({ standalone = false, onBack }: {
     finally { setBusy(false); }
   }
   const offlineWarning = <p className="offline-safety">
-    <ShieldAlert size={17}/> Hors connexion : le stock affiché peut avoir changé sur un autre appareil.
-    Toute vente reste en attente jusqu’à la validation du serveur. Le reçu définitif n’est disponible qu’après confirmation.
+    <ShieldAlert size={17}/> Stock indicatif · Toute vente reste en attente jusqu’à validation du serveur.
   </p>;
 
   return (
     <section className="offline-page">
       <header className="offline-heading">
-        <div><h3><WifiOff size={20}/> Caisse hors ligne sécurisée</h3>
-          <p>Brouillons chiffrés sur cet appareil, sans accès à PostgreSQL hors réseau.</p></div>
+        <h3><WifiOff size={19}/> Caisse locale</h3>
         <div className="offline-top-actions">
           {unlocked && <button className="offline-secondary" onClick={() => {
             lockVault(); setUnlocked(false); setCart([]); setCatalog(null); setPending([]); setMessage('');
@@ -269,7 +267,7 @@ export default function OfflinePOS({ standalone = false, onBack }: {
             <input aria-label="Confirmer la phrase secrète" type="password" autoComplete="off"
               minLength={8} value={repeat} onChange={(e) => setRepeat(e.target.value)} required/>
           </label>}
-          <small>Sans cette phrase, les brouillons chiffrés ne pourront pas être récupérés. Ne l’utilise pas comme mot de passe de connexion.</small>
+          <small>Conserve cette phrase secrète : elle protège tes ventes en attente.</small>
           <button className="pos-submit" type="submit" disabled={busy}>
             {busy ? 'Chiffrement…' : configured ? 'Déverrouiller' : 'Activer le mode local'}
           </button>
@@ -278,24 +276,29 @@ export default function OfflinePOS({ standalone = false, onBack }: {
         <>
           {offlineWarning}
           <div className="offline-toolbar">
-            <span>Catalogue : {catalog?.updated_at ? new Date(catalog.updated_at).toLocaleString('fr-FR') : 'non téléchargé'}</span>
+            <span className="offline-catalog-date">
+              {catalog?.updated_at ? 'Catalogue du ' + new Date(catalog.updated_at).toLocaleString('fr-FR') : 'Catalogue à télécharger'}
+            </span>
             <button className="offline-secondary" disabled={busy} onClick={() => void cacheCatalog()}>
-              <RefreshCw size={15}/> Mettre à jour le catalogue
+              <RefreshCw size={15}/> Actualiser le catalogue
             </button>
             <button className="offline-sync" disabled={busy || !pending.some((s) => s.status === 'pending')}
-              onClick={() => void sync()}><CloudUpload size={15}/> Synchroniser les ventes
+              onClick={() => void sync()}><CloudUpload size={15}/> Synchroniser
             </button>
           </div>
           <div className="offline-layout">
-            <section className="offline-catalog">
-              <h4>Articles disponibles selon la dernière copie</h4>
+            <section className="offline-catalog" aria-label="Catalogue hors ligne">
+              <div className="offline-panel-title">
+                <h4>Produits disponibles</h4>
+                <span>{visibleProducts.length} article(s)</span>
+              </div>
               <input className="offline-search" aria-label="Rechercher hors ligne" placeholder="Rechercher un article…"
                 value={search} onChange={(e) => setSearch(e.target.value)}/>
               {!catalog && <p className="phase7-empty">Connecte-toi une fois et clique « Mettre à jour le catalogue » pour préparer une utilisation hors ligne.</p>}
-              <div className="offline-products">
+              <div className="offline-products" role="region" aria-label="Défilement indépendant des produits" tabIndex={0}>
                 {visibleProducts.map((p) => (
                   <article className="offline-product" key={p.id}>
-                    <strong>{productLabel(p)}</strong><small>Stock mémorisé : {p.quantity} · Réservé localement : {reserved(p.id)}</small>
+                    <strong>{productLabel(p)}</strong><small>Stock indicatif : {p.quantity} · En attente : {reserved(p.id)}</small>
                     <div><b>{money(p.sale_price)}</b>
                       <button type="button" onClick={() => addProduct(p)} disabled={busy || available(p) <= 0}>Ajouter</button>
                     </div>
@@ -303,10 +306,12 @@ export default function OfflinePOS({ standalone = false, onBack }: {
                 ))}
               </div>
             </section>
-            <section className="offline-cart">
-              <h4>Panier provisoire ({cart.length} ligne(s))</h4>
+            <section className="offline-cart" aria-label="Panier hors ligne">
+              <div className="offline-panel-title">
+                <h4>Panier provisoire</h4><span>{cart.length} ligne(s)</span>
+              </div>
               {cart.length === 0 ? <p className="phase7-empty">Choisis un article dans le catalogue hors ligne.</p> :
-                <div className="offline-cart-lines">
+                <div className="offline-cart-lines" role="region" aria-label="Défilement indépendant du panier" tabIndex={0}>
                   {cart.map((line) => (
                     <div className="offline-line" key={line.key}>
                       <strong>{productLabel(line.product)}</strong>
@@ -363,15 +368,16 @@ export default function OfflinePOS({ standalone = false, onBack }: {
                   </label>
                 </div>}
                 <button type="submit" className="pos-submit" disabled={busy || cart.length === 0}>
-                  <Save size={16}/> Enregistrer en attente (pas une vente confirmée)
+                  <Save size={16}/> Enregistrer en attente
                 </button>
               </form>
             </section>
           </div>
           <section className="offline-queue">
-            <h4>File de synchronisation ({pending.length})</h4>
-            <p className="phase7-empty">Les ventes sont envoyées avec une référence stable et vérifiées par Django.
-              En cas de conflit, aucune sortie de stock n’est validée.</p>
+            <div className="offline-panel-title">
+              <h4>File de synchronisation</h4>
+              <span>{pending.length} vente(s)</span>
+            </div>
             {!pending.length && <p className="offline-empty">Aucune vente en attente sur cet appareil.</p>}
             <div className="offline-pending-grid">
               {pending.map((item) => (

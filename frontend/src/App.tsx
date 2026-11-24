@@ -192,7 +192,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
           ) : (
             <div className="page-title">
               <div><h2>{selected.label}</h2><p>{selected.description}</p></div>
-              <span className="phase-pill"><CheckCircle2 size={15}/> Caisse active</span>
+              <span className="phase-pill"><CheckCircle2 size={15}/> {page === 'offline' ? 'Coffre local' : 'Caisse active'}</span>
             </div>
           )}
           {page === 'products' ? (

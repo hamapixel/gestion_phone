@@ -32,15 +32,19 @@ describe('Caisse hors ligne', () => {
   it('présente le stock comme provisoire, sans promettre une facture hors connexion', async () => {
     render(<OfflinePOS/>);
     expect(await screen.findByText('Pochette')).toBeTruthy();
-    expect(screen.getByText('Stock mémorisé : 10 · Réservé localement : 0')).toBeTruthy();
+    expect(screen.getByText('Stock indicatif : 10 · En attente : 0')).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Défilement indépendant des produits' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Catalogue hors ligne' })).toBeTruthy();
     expect(screen.getByText(/Toute vente reste en attente/)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Enregistrer en attente/ }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByText(/sans accès à PostgreSQL/)).toBeNull();
   });
 
   it('chiffre le brouillon avant de vider le panier et garde UUID et origine', async () => {
     render(<OfflinePOS/>);
     expect(await screen.findByText('Pochette')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
+    expect(screen.getByRole('region', { name: 'Défilement indépendant du panier' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Enregistrer en attente/ }));
     await waitFor(() => {
       expect(storage.savePending).toHaveBeenCalledOnce();
@@ -81,7 +85,7 @@ describe('Caisse hors ligne', () => {
     }));
     render(<OfflinePOS/>);
     expect(await screen.findByText('En attente de validation')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser les ventes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Synchroniser' }));
     await waitFor(() => {
       const post = vi.mocked(fetch).mock.calls.find(([url, options]) =>
         url === '/api/sales/' && options?.method === 'POST'

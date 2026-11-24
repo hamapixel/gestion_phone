@@ -13,5 +13,13 @@ export default defineConfig({
       '/api': { target: 'http://backend:8000', changeOrigin: true },
     },
   },
-  test: { environment: 'jsdom', globals: true, css: false },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    css: false,
+    // Limit concurrent jsdom browsers to avoid CPU/memory starvation in Docker Desktop.
+    maxWorkers: 2,
+    minWorkers: 1,
+    testTimeout: 15000,
+  },
 });

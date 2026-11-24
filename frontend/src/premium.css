@@ -395,3 +395,17 @@ input,select,textarea { max-width:100%; }
   .live-dashboard-refresh,.account-page { display:none!important; }
   .live-chart-panel,.live-kpi-card { break-inside:avoid; box-shadow:none; }
 }
+
+
+/* Dashboard: one personal welcome and the financial tools immediately below. */
+.dashboard-welcome { display:flex; align-items:center; min-height:48px; margin:0 0 10px; }
+.dashboard-welcome h2 { margin:0; font-size:clamp(22px,2.1vw,30px); line-height:1.22; font-weight:850; letter-spacing:-.04em; color:var(--ink); overflow-wrap:anywhere; }
+.dashboard-welcome + .live-dashboard { margin-top:0; }
+.dashboard-welcome + .live-dashboard .live-dashboard-heading { align-items:center; }
+.dashboard-welcome + .live-dashboard .live-dashboard-heading h3 { font-size:15px; margin:0; }
+@media(max-width:760px) {
+  .dashboard-welcome { margin-bottom:9px; min-height:42px; }
+  .dashboard-welcome h2 { font-size:clamp(21px,6vw,26px); }
+  .dashboard-welcome + .live-dashboard .live-dashboard-heading { display:flex; align-items:center; justify-content:space-between; }
+  .dashboard-welcome + .live-dashboard .live-dashboard-refresh { width:auto; min-height:36px; padding:8px 11px; }
+}

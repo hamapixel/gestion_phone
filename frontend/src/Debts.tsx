@@ -38,6 +38,7 @@ export default function Debts() {
   const [payments, setPayments] = useState<DebtPaymentList | null>(null);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState('');
+  const [historyType, setHistoryType] = useState<'all' | 'initial' | 'repayment'>('all');
   const [filter, setFilter] = useState<Filter>('open');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -90,6 +91,12 @@ export default function Debts() {
       .finally(() => { if (!controller.signal.aborted) setPaymentsLoading(false); });
     return () => controller.abort();
   }, [query, notice]);
+
+  // The API returns a bounded recent history; the sum is explicitly only for the visible rows.
+  const visiblePayments = (payments?.results ?? []).filter((item) =>
+    historyType === 'all' || item.kind === historyType
+  );
+  const displayedPaymentsTotal = visiblePayments.reduce((sum, item) => sum + Number(item.amount), 0);
 
   function openPayment(debt: Debt) {
     if (Number(debt.balance) <= 0) return;
@@ -235,37 +242,69 @@ export default function Debts() {
         <div className="debt-history-heading">
           <div>
             <h3 id="debt-history-heading">Liste des paiements de créances</h3>
-            <p>Acomptes et remboursements enregistrés, y compris les dettes entièrement payées.</p>
+            <p>Acomptes et remboursements, même pour les créances entièrement réglées.</p>
           </div>
-          {payments && <span>{payments.results.length} paiement(s) affiché(s)</span>}
+          {payments && <span className="debt-history-total" aria-live="polite">
+            <small>Total des {visiblePayments.length} paiements affichés</small>
+            <strong>{money(displayedPaymentsTotal)}</strong>
+          </span>}
+        </div>
+        <div className="debt-history-toolbar" role="group" aria-label="Type de paiement">
+          {([['all', 'Tous les paiements'], ['initial', 'Acomptes'], ['repayment', 'Remboursements']] as const)
+            .map(([kind, label]) => (
+              <button key={kind} type="button" aria-pressed={historyType === kind}
+                className={historyType === kind ? 'selected' : ''}
+                onClick={() => setHistoryType(kind)}>{label}</button>
+            ))}
         </div>
         {paymentsLoading && <p className="catalog-empty">Chargement des paiements…</p>}
         {paymentsError && <p className="catalog-error" role="alert">{paymentsError}</p>}
-        {!paymentsLoading && payments && (payments.results.length > 0 ?
-          <div className="debt-history-grid">
-            {payments.results.map((payment) => (
-              <article className="debt-history-card" key={payment.id}>
-                <div className="debt-history-client">
-                  <strong>{payment.customer_name}</strong>
-                  <small>{payment.reference} · {payment.customer_phone}</small>
-                </div>
-                <div className="debt-history-details">
-                  <span>{formattedDate(payment.created_at)}</span>
-                  <span>{methods[payment.method] || payment.method}</span>
-                  <span className="debt-history-kind">{payment.kind === 'initial' ? 'Acompte initial' : 'Remboursement'}</span>
-                </div>
-                <div className="debt-history-bottom">
-                  <strong>{money(payment.amount)}</strong>
-                  <button type="button" className="debt-document"
-                    aria-label={'Reçu du paiement ' + payment.id}
-                    onClick={() => setDocumentPayment(payment.id)}>
-                    <ReceiptText size={15}/> Reçu
-                  </button>
-                </div>
-              </article>
-            ))}
+        {!paymentsLoading && payments && (visiblePayments.length > 0 ?
+          <div className="responsive-records" role="region" aria-label="Historique des paiements de créances">
+            <table className="responsive-records-table debt-history-table">
+              <thead>
+                <tr>
+                  <th scope="col">Client</th>
+                  <th scope="col">Vente</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Moyen</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Montant reçu</th>
+                  <th scope="col">Reçu</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visiblePayments.map((payment) => (
+                  <tr key={payment.id} className="debt-history-row">
+                    <td data-label="Client" className="record-reference">
+                      {payment.customer_name || 'Client'}
+                      {payment.customer_phone && <small className="record-subline">{payment.customer_phone}</small>}
+                    </td>
+                    <td data-label="Vente" className="record-muted">{payment.reference}</td>
+                    <td data-label="Date"><time dateTime={payment.created_at}>{formattedDate(payment.created_at)}</time></td>
+                    <td data-label="Moyen">{methods[payment.method] || payment.method}</td>
+                    <td data-label="Type"><span className={'record-status ' +
+                      (payment.kind === 'initial' ? 'record-status--initial' : 'record-status--paid')}>
+                      {payment.kind === 'initial' ? 'Acompte initial' : 'Remboursement'}
+                    </span></td>
+                    <td data-label="Montant" className="record-amount">{money(payment.amount)}</td>
+                    <td data-label="Document">
+                      <button type="button" className="debt-document"
+                        aria-label={'Reçu du paiement ' + payment.id}
+                        onClick={() => setDocumentPayment(payment.id)}>
+                        <ReceiptText size={15}/> Reçu
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div> :
-          <p className="debt-history-empty">Aucun paiement de créance enregistré pour cette recherche.</p>
+          <p className="debt-history-empty">Aucun paiement pour ce filtre et cette recherche.</p>
+        )}
+        {payments && payments.results.length >= payments.limit && (
+          <p className="record-limit">Historique limité aux {payments.limit} derniers paiements.
+            Le total indiqué concerne uniquement les lignes affichées.</p>
         )}
       </section>
       {documentSale && <InvoiceModal saleId={documentSale} onClose={() => setDocumentSale(null)}/>}

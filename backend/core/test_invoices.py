@@ -100,6 +100,26 @@ class InvoiceTests(TestCase):
         self.assertEqual(receipt.json()["payment"]["amount"], "1000.00")
         self.assertEqual(receipt.json()["sale"]["reference"], old_sale["reference"])
 
+
+    def test_public_identity_displays_configured_brand_without_private_contact_data(self):
+        data = self.shop_data(name="YaraPhone")
+        self.assertEqual(self.save_shop(data).status_code, 200)
+        guest = Client()
+        response = guest.get(reverse("shop-identity"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"identity": {"name": "YaraPhone", "logo_data": ""}})
+        for sensitive in ("phone", "email", "address", "tax_id", "footer"):
+            self.assertNotIn(sensitive, response.content.decode())
+        self.assertIn("no-cache", response.headers.get("Cache-Control", ""))
+        self.assertEqual(guest.get(reverse("shop")).status_code, 401)
+        manifest = guest.get(reverse("shop-manifest"))
+        self.assertEqual(manifest.status_code, 200)
+        self.assertTrue(manifest["Content-Type"].startswith("application/manifest+json"))
+        self.assertEqual(manifest.json()["name"], "YaraPhone — Gestion de boutique")
+        self.assertEqual(manifest.json()["short_name"], "YaraPhone")
+        self.assertNotIn("74980744", manifest.content.decode())
+        self.assertNotIn("boutique@example.com", manifest.content.decode())
+
     def test_same_shop_information_does_not_create_version(self):
         response = self.save_shop(self.shop_data())
         self.assertTrue(response.json()["updated"])

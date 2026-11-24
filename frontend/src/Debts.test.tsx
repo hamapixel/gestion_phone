@@ -45,8 +45,46 @@ describe('PhoneStock — créances', () => {
     expect(await screen.findByRole('heading', { name: 'Liste des paiements de créances' })).toBeTruthy();
     expect(screen.getByText('Acompte initial')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Reçu du paiement p0' })).toBeTruthy();
-    expect(document.querySelector('.debt-history-card')).not.toBeNull();
+    expect(document.querySelector('.debt-history-table tbody tr')).not.toBeNull();
+    expect(screen.getByRole('table')).toBeTruthy();
   });
+  it('filtre les paiements sans altérer les montants ni les reçus, avec total des lignes affichées', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.startsWith('/api/debt-payments/?')) return { ok: true, json: async () => ({
+        results: [
+          { id: 'p0', amount: '3000.00', method: 'cash', created_at: '2026-11-20T10:00:00Z',
+            sale_id: 'sale-1', reference: 'VTE-AAA123', customer_name: 'Awa Coulibaly',
+            customer_phone: '75000000', kind: 'initial', client_ref: null },
+          { id: 'p1', amount: '500.00', method: 'orange', created_at: '2026-11-21T10:00:00Z',
+            sale_id: 'sale-1', reference: 'VTE-AAA123', customer_name: 'Awa Coulibaly',
+            customer_phone: '75000000', kind: 'repayment', client_ref: 'repay-1' },
+        ], limit: 100,
+      }) };
+      if (url.startsWith('/api/debts/?')) return { ok: true, json: async () => ({
+        results: [credit], summary: { outstanding: '7000.00', open_count: 1, overdue_count: 1 },
+      }) };
+      throw new Error('Route inattendue : ' + url);
+    }));
+    render(<Debts/>);
+    expect(await screen.findByText('3 500 FCFA')).toBeTruthy();
+    const table = screen.getByRole('table');
+    expect(table.querySelectorAll('thead th').length).toBe(7);
+    expect(table.querySelectorAll('tbody tr').length).toBe(2);
+    expect(screen.getByRole('button', { name: 'Reçu du paiement p1' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remboursements' }));
+    expect(screen.getAllByText('500 FCFA').length).toBeGreaterThanOrEqual(1);
+    expect(table.querySelectorAll('tbody tr').length).toBe(1);
+    expect(screen.queryByRole('button', { name: 'Reçu du paiement p0' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Acomptes' }));
+    expect(screen.getAllByText('3 000 FCFA').length).toBeGreaterThanOrEqual(1);
+    expect(table.querySelectorAll('tbody tr').length).toBe(1);
+    expect(screen.queryByRole('button', { name: 'Reçu du paiement p1' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Tous les paiements' }));
+    expect(table.querySelectorAll('tbody tr').length).toBe(2);
+  });
+
   it('encaisse la moitié avec CSRF sans modifier le montant de la vente', async () => {
     render(<Debts/>);
     await screen.findAllByText('Awa Coulibaly');

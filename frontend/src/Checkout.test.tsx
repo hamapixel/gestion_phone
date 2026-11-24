@@ -123,6 +123,33 @@ describe('PhoneStock Pro — caisse intelligente', () => {
     expect(await screen.findByRole('button', { name: 'Ajouter Samsung Galaxy A17' })).toBeTruthy();
     expect(screen.queryByText('Samsung Galaxy A17 · Samsung · Galaxy A17')).toBeNull();
   });
+  it('affiche les dernières ventes dans un tableau sémantique, avec données utilisables en carte mobile', async () => {
+    const recent = {
+      id: 'sale-history-1', reference: 'VTE-HIST-01',
+      created_at: '2026-11-23T13:42:25Z',
+      customer_name: 'Awa', customer_phone: '75000000',
+      status: 'credit', balance: '1250.00',
+      total: '2500.00', amount_paid: '1250.00',
+    };
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.startsWith('/api/products/?q=')) return { ok: true, json: async () => ({ results: [] }) };
+      if (url === '/api/sales/') return { ok: true, json: async () => ({
+        ...salesList, results: [recent],
+      }) };
+      throw new Error('Route inattendue : ' + url);
+    }));
+    render(<Checkout/>);
+    const table = await screen.findByRole('table');
+    expect(table.querySelectorAll('thead th').length).toBe(6);
+    expect(screen.getByText('VTE-HIST-01')).toBeTruthy();
+    expect(screen.getByText('Awa')).toBeTruthy();
+    expect(screen.getByText('Crédit · reste 1 250 FCFA')).toBeTruthy();
+    const cell = table.querySelector('td[data-label="Total"]');
+    expect((cell?.textContent || '').replace(/[\u202f\u00a0]/g, ' ')).toBe('2 500 FCFA');
+    expect(table.querySelector('time[datetime="2026-11-23T13:42:25Z"]')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Facture VTE-HIST-01' })).toBeTruthy();
+  });
+
   it('demande un IMEI pour ajouter un téléphone au panier', async () => {
     render(<Checkout/>);
     fireEvent.click(await screen.findByRole('button', { name: 'Ajouter Téléphone · Samsung · Galaxy A17' }));

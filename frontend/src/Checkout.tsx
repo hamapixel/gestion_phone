@@ -344,7 +344,7 @@ export default function Checkout() {
                 <label>Échéance (facultatif)
                   <input type="date" disabled={freeze} value={dueDate} onChange={(event) => setDueDate(event.target.value)}/>
                 </label>
-                <small>Le suivi des versements et les relances WhatsApp seront ajoutés en Phase 07.</small>
+                <small>Les versements et relances sont suivis dans l’espace Créances.</small>
               </div>
             )}
             {error && <p className="pos-error" role="alert">{error}</p>}
@@ -354,17 +354,52 @@ export default function Checkout() {
           </form>
         </section>
       </div>
-      <section className="pos-recent">
-        <h3>Dernières ventes</h3>
-        {!salesData?.results.length ? <p>Aucune vente enregistrée.</p> :
-          <div className="pos-recent-list">
-            {salesData.results.slice(0, 8).map((sale) => (
-              <article key={sale.id} className="pos-recent-card">
-                <div><strong>{sale.reference}</strong><small>{new Date(sale.created_at).toLocaleString('fr-FR')}</small></div>
-                <div><strong>{money(sale.total)}</strong><small>{sale.status === 'credit' ? 'Créance : ' + money(sale.balance) : 'Payée'}</small></div>
-                <button className="pos-invoice-button" onClick={() => setInvoiceSaleId(sale.id)}><ReceiptText size={15}/> Facture</button>
-              </article>
-            ))}
+      <section className="pos-recent" aria-labelledby="pos-recent-title">
+        <div className="pos-recent-heading">
+          <div>
+            <h3 id="pos-recent-title">Dernières ventes</h3>
+            <p>Historique récent des ventes enregistrées et factures à consulter.</p>
+          </div>
+          <span className="pos-recent-count">{salesData?.results.slice(0, 8).length ?? 0} vente(s)</span>
+        </div>
+        {!salesData?.results.length ? <p className="pos-recent-empty">Aucune vente enregistrée.</p> :
+          <div className="responsive-records" role="region" aria-label="Tableau des dernières ventes">
+            <table className="responsive-records-table pos-sales-table">
+              <thead>
+                <tr>
+                  <th scope="col">Référence</th>
+                  <th scope="col">Date et heure</th>
+                  <th scope="col">Client</th>
+                  <th scope="col">Montant total</th>
+                  <th scope="col">Statut</th>
+                  <th scope="col">Facture</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesData.results.slice(0, 8).map((sale) => (
+                  <tr key={sale.id}>
+                    <td data-label="Référence" className="record-reference">{sale.reference}</td>
+                    <td data-label="Date" className="record-muted">
+                      <time dateTime={sale.created_at}>{new Date(sale.created_at).toLocaleString('fr-FR')}</time>
+                    </td>
+                    <td data-label="Client">{sale.customer_name || 'Client comptant'}</td>
+                    <td data-label="Total" className="record-amount">{money(sale.total)}</td>
+                    <td data-label="Statut">
+                      <span className={'record-status ' + (sale.status === 'credit' ? 'record-status--credit' : 'record-status--paid')}>
+                        {sale.status === 'credit' ? 'Crédit · reste ' + money(sale.balance) : 'Payée'}
+                      </span>
+                    </td>
+                    <td data-label="Document">
+                      <button type="button" className="pos-invoice-button"
+                        aria-label={'Facture ' + sale.reference}
+                        onClick={() => setInvoiceSaleId(sale.id)}>
+                        <ReceiptText size={15}/> Facture
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         }
       </section>

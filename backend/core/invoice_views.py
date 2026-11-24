@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .catalog_views import clean_text, owner_only
@@ -60,6 +61,39 @@ def validate_logo(value):
 
 def current_branding():
     return ShopConfig.objects.select_related("branding").get(pk=1).branding
+
+
+@require_GET
+@never_cache
+def shop_identity(request):
+    """Public-facing shop name/logo for the login screen; no contact or tax data."""
+    branding = current_branding()
+    return JsonResponse({"identity": {
+        "name": branding.name,
+        "logo_data": branding.logo_data,
+    }})
+
+
+@require_GET
+@never_cache
+def shop_manifest(request):
+    """Give the installed web app its current boutique name without private fields."""
+    branding = current_branding()
+    return JsonResponse({
+        "name": branding.name + " — Gestion de boutique",
+        "short_name": branding.name[:24],
+        "description": "Gestion sécurisée de ventes et stocks de la boutique.",
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#101c32",
+        "theme_color": "#101c32",
+        "lang": "fr",
+        "icons": [{
+            "src": "/icon.svg", "sizes": "any",
+            "type": "image/svg+xml", "purpose": "any"
+        }],
+    }, content_type="application/manifest+json")
 
 
 @require_http_methods(["GET", "PUT"])

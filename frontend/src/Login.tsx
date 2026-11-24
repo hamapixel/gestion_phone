@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { DEFAULT_SHOP, applyBrowserIdentity, normalizedIdentity, type ShopIdentity } from './shopIdentity';
 import { Eye, EyeOff, ShieldCheck, Smartphone } from 'lucide-react';
 
 type Props = {
@@ -11,6 +12,25 @@ export default function Login({ onSubmit, error, disabled }: Props) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [reveal, setReveal] = useState(false);
+  const [identity, setIdentity] = useState<ShopIdentity>(DEFAULT_SHOP);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/shop/identity/', { credentials: 'same-origin', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Identité indisponible');
+        return await response.json() as { identity?: ShopIdentity };
+      })
+      .then((data) => {
+        if (!controller.signal.aborted && data.identity) {
+          const next = normalizedIdentity(data.identity);
+          setIdentity(next);
+          applyBrowserIdentity(next);
+        }
+      })
+      .catch(() => { /* Default branding is kept if the backend is offline. */ });
+    return () => controller.abort();
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,11 +42,13 @@ export default function Login({ onSubmit, error, disabled }: Props) {
     <div className="auth-screen">
       <section className="auth-card" aria-label="Connexion propriétaire">
         <div className="auth-brand">
-          <span className="auth-logo"><Smartphone size={25}/></span>
-          <span><strong>PhoneStock <em>Pro</em></strong><small>GESTION COMMERCIALE</small></span>
+          <span className="auth-logo">{identity.logo_data
+            ? <img src={identity.logo_data} alt={'Logo ' + identity.name} />
+            : <Smartphone size={25}/>}</span>
+          <span className="auth-brand-name"><strong>{identity.name}</strong><small>ESPACE BOUTIQUE SÉCURISÉ</small></span>
         </div>
         <h1>Bon retour 👋</h1>
-        <p className="auth-subtitle">Connectez-vous à votre boutique en toute sécurité.</p>
+        <p className="auth-subtitle">Connectez-vous à votre espace {identity.name} en toute sécurité.</p>
         <form className="auth-form" onSubmit={submit}>
           <div className="auth-field">
             <label htmlFor="owner-id">Téléphone ou email</label>
@@ -52,6 +74,7 @@ export default function Login({ onSubmit, error, disabled }: Props) {
           </button>
         </form>
         <p className="auth-help"><ShieldCheck size={13} style={{ verticalAlign: 'middle' }}/> Un seul compte propriétaire par boutique.</p>
+        <p className="auth-powered">Propulsé par PhoneStock Pro</p>
       </section>
     </div>
   );

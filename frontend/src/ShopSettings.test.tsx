@@ -19,11 +19,12 @@ describe('Paramètres de facturation', () => {
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
   it('charge et modifie la boutique sans demander catégorie ou rôles', async () => {
-    render(<ShopSettings/>);
+    const onSaved = vi.fn();
+    render(<ShopSettings onSaved={onSaved}/>);
     expect(await screen.findByDisplayValue('PhoneStock Pro')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Nom de la boutique *'), { target: { value: 'Boutique Seydou' } });
     fireEvent.change(screen.getByLabelText('Téléphone'), { target: { value: '74980744' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer l’en-tête' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer l’identité de ma boutique' }));
     await waitFor(() => {
       const found = vi.mocked(fetch).mock.calls.find(([url, opts]) => url === '/api/shop/' && opts?.method === 'PUT');
       expect(found).toBeTruthy();
@@ -32,6 +33,7 @@ describe('Paramètres de facturation', () => {
       expect(data.phone).toBe('74980744');
       expect((found![1]!.headers as Record<string, string>)['X-CSRFToken']).toBe('invoice-test');
     });
-    expect(await screen.findByText(/En-tête enregistré/)).toBeTruthy();
+    expect(await screen.findByText(/Identité enregistrée/)).toBeTruthy();
+    expect(onSaved).toHaveBeenCalledWith(expect.objectContaining({ name: 'Boutique Seydou', phone: '74980744' }));
   });
 });

@@ -28,7 +28,7 @@ describe('PhoneStock Pro - propriétaire unique', () => {
   it('protège le tableau de bord tant que le propriétaire est déconnecté', async () => {
     render(<AuthGate/>);
     expect(await screen.findByRole('button', { name: 'Se connecter' })).toBeTruthy();
-    expect(screen.queryByText('Bienvenue dans PhoneStock Pro')).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Bienvenue/ })).toBeNull();
   });
 
   it('affiche la connexion compacte et permet un login propriétaire', async () => {
@@ -37,7 +37,7 @@ describe('PhoneStock Pro - propriétaire unique', () => {
     fireEvent.change(screen.getByLabelText('Téléphone ou email'), { target: { value: '74980744' } });
     fireEvent.change(screen.getByLabelText('Mot de passe'), { target: { value: 'StrongOwnerPass+2026' } });
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
-    expect(await screen.findByText('Bienvenue dans PhoneStock Pro')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Bienvenue, 74980744 !' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Se déconnecter' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Se connecter' })).toBeTruthy());
@@ -50,6 +50,6 @@ describe('PhoneStock Pro - propriétaire unique', () => {
     fireEvent.change(screen.getByLabelText('Mot de passe'), { target: { value: 'incorrect' } });
     fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
     expect(await screen.findByRole('alert')).toBeTruthy();
-    expect(screen.queryByText('Bienvenue dans PhoneStock Pro')).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Bienvenue/ })).toBeNull();
   });
 });

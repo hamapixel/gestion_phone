@@ -26,8 +26,39 @@ describe('PhoneStock Pro - phase 01', () => {
   it('affiche le tableau de bord', async () => {
     render(<App/>);
     await screen.findByText('API connectée');
-    expect(screen.getByText('Bienvenue dans PhoneStock Pro')).toBeTruthy();
-    expect(screen.getByText('Fonctionnalités disponibles')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Bienvenue !' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Aperçu financier' })).toBeTruthy();
+    expect(screen.queryByText('Pilotez')).toBeNull();
+    expect(screen.queryByText('ESPACE PREMIUM · VOTRE BOUTIQUE')).toBeNull();
+  });
+
+  it('salue la personne réellement connectée plutôt que la boutique', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url === '/api/account/profile/') return { ok: true, json: async () => ({
+        profile: { username: 'owner123', first_name: 'Aminata', display_name: 'Aminata Traoré' },
+      }) };
+      if (url === '/api/shop/') return { ok: true, json: async () => ({
+        shop: { name: 'YaraPhone', logo_data: '' },
+      }) };
+      if (url === '/api/health/') return { ok: true, json: async () => ({ status: 'ok' }) };
+      return { ok: true, json: async () => ({ status: 'ok' }) };
+    }));
+    render(<App ownerName="owner123"/>);
+    expect(await screen.findByRole('heading', { name: 'Bienvenue, Aminata !' })).toBeTruthy();
+    expect(screen.queryByText('Bienvenue dans YaraPhone')).toBeNull();
+    expect(screen.queryByText('VOTRE COMMERCE, VOTRE IDENTITÉ')).toBeNull();
+    expect(screen.queryByText('Fonctionnalités disponibles')).toBeNull();
+    expect(screen.queryByText('ESPACE PREMIUM · VOTRE BOUTIQUE')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Aperçu financier' })).toBeTruthy();
+  });
+
+  it('accueille le compte connecté même si l’API du profil ne répond pas', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url === '/api/account/profile/') throw new Error('Profil temporairement indisponible');
+      return { ok: true, json: async () => ({ status: 'ok' }) };
+    }));
+    render(<App ownerName="proprietaire01"/>);
+    expect(await screen.findByRole('heading', { name: 'Bienvenue, proprietaire01 !' })).toBeTruthy();
   });
 
   it('ouvre la caisse active sans afficher un module fictif', async () => {
@@ -59,7 +90,7 @@ describe('PhoneStock Pro - phase 01', () => {
       throw new Error('Unexpected URL: ' + url);
     }));
     render(<App/>);
-    expect(await screen.findByText('Bienvenue dans YaraPhone')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeTruthy();
     expect(document.title).toBe('YaraPhone · Gestion de boutique');
     expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(2);
 
@@ -73,7 +104,7 @@ describe('PhoneStock Pro - phase 01', () => {
       expect(document.title).toBe('YaraPhone Premium · Gestion de boutique');
     });
     fireEvent.click(screen.getAllByRole('button', { name: 'Tableau de bord' })[0]);
-    expect(await screen.findByText('Bienvenue dans YaraPhone Premium')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Bienvenue !' })).toBeTruthy();
     expect(screen.getAllByText(/Propulsé par PhoneStock Pro/).length).toBeGreaterThanOrEqual(1);
   });
 

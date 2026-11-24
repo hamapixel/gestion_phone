@@ -24,9 +24,12 @@ Installer Rust stable >= 1.90, Microsoft C++ Build Tools avec SDK Windows, WebVi
 
 ```powershell
 cd "$HOME\Desktop\gestion_phone"
-npm --prefix frontend install
-npm --prefix desktop install
-npm --prefix desktop run dev
+cd frontend
+npm install
+cd ..
+cd desktop
+npm install
+npm run dev
 ```
 
 Créer une phrase secrète locale, verrouiller et déverrouiller. Ne pas utiliser encore pour des ventes réelles.
@@ -34,7 +37,8 @@ Créer une phrase secrète locale, verrouiller et déverrouiller. Ne pas utilise
 ### Générer un installateur NSIS non signé
 
 ```powershell
-npm --prefix desktop run build
+cd desktop
+npm run build
 ```
 
 Résultat attendu après compilation : dossier desktop/src-tauri/target/release/bundle/nsis. Le nom exact du fichier est à vérifier au build.
@@ -44,7 +48,9 @@ Résultat attendu après compilation : dossier desktop/src-tauri/target/release/
 ```powershell
 docker compose exec backend python manage.py test core
 docker compose exec frontend npm run test
-npm --prefix frontend run build
+cd frontend
+npm run build
+cd ..
 cargo test --manifest-path desktop/src-tauri/Cargo.toml --lib
 ```
 

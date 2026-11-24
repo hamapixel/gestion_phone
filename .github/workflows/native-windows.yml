@@ -24,13 +24,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: desktop/src-tauri
-      - name: Install dependencies
-        run: |
-          npm --prefix frontend install --no-audit --no-fund
-          npm --prefix desktop install --no-audit --no-fund
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
       - name: Validate frontend
-        run: npm --prefix frontend run build
+        working-directory: frontend
+        run: npm run build
       - name: Native Rust unit tests
         run: cargo test --manifest-path desktop/src-tauri/Cargo.toml --lib
       - name: Build unsigned Windows NSIS prototype
-        run: npm --prefix desktop run build
+        working-directory: desktop
+        run: npm run build

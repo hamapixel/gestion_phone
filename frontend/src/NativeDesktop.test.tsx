@@ -21,7 +21,7 @@ describe('Phase 09 — démarrage natif Windows', () => {
       };
       throw new Error('commande interdite');
     });
-    window.__TAURI__ = { core: { invoke } };
+    window.__TAURI__ = { core: { invoke: invoke as unknown as <T>(command: string, args?: Record<string, unknown>) => Promise<T> } };
     const fetch = vi.fn(async () => { throw new Error('pas de serveur'); });
     vi.stubGlobal('fetch', fetch);
     render(<AuthGate/>);

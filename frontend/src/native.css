@@ -1,0 +1,30 @@
+
+/* Phase 09 — native Windows diagnostic shell; not an online checkout. */
+.native-root { min-height:100dvh; overflow-y:auto; background:radial-gradient(circle at 5% 0%,rgba(60,107,225,.11),transparent 35%),var(--bg); padding:clamp(20px,4vw,48px); color:var(--ink); }
+.native-shell { max-width:1120px; margin:0 auto; display:grid; gap:22px; }
+.native-header { display:flex; align-items:center; gap:13px; }
+.native-header>div:last-child { display:grid; gap:5px; }
+.native-header strong { font-size:20px; letter-spacing:-.035em; }
+.native-header small { font-size:10px; font-weight:800; color:var(--muted); letter-spacing:.11em; }
+.native-icon { display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; color:#fff; border-radius:14px; background:linear-gradient(140deg,#ff8e30,#f5660d); box-shadow:0 9px 18px rgba(235,107,15,.15); }
+.native-banner { background:linear-gradient(125deg,#102044,#1e4481); border-radius:21px; padding:clamp(24px,4vw,42px); color:#fff; box-shadow:0 18px 45px rgba(14,39,84,.15); }
+.native-banner>span { display:inline-flex; align-items:center; gap:9px; font-size:10px; font-weight:820; letter-spacing:.14em; color:#accbff; }
+.native-banner h1 { margin:14px 0 8px; font-size:clamp(27px,3vw,39px); letter-spacing:-.04em; }
+.native-banner p { font-size:12px; color:#c8d9f1; margin:0; }
+.native-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; align-items:start; }
+.native-panel { display:grid; gap:15px; align-content:start; border:1px solid var(--border); border-radius:18px; background:var(--surface); box-shadow:var(--premium-shadow); padding:clamp(17px,2.7vw,25px); min-width:0; }
+.native-panel h2 { display:flex; align-items:center; gap:9px; font-size:17px; margin:0; }
+.native-panel h2 svg { color:var(--blue); }
+.native-form { display:grid; gap:13px; }
+.native-form label { display:grid; gap:7px; font-size:11px; font-weight:800; }
+.native-form input { min-height:44px; border:1px solid var(--border); color:var(--ink); background:var(--surface); border-radius:11px; padding:10px 12px; width:100%; }
+.native-form small { color:var(--muted); font-size:11px; line-height:1.6; }
+.native-primary { display:flex; align-items:center; justify-content:center; min-height:44px; padding:11px 15px; border:0; border-radius:11px; background:linear-gradient(110deg,#315ef3,#2850c8); color:#fff; font-weight:820; font-size:12px; }
+.native-primary:disabled { opacity:.5; }
+.native-success { display:flex; align-items:center; gap:8px; color:#24835c; font-size:12px; }
+.native-count { display:flex; align-items:center; justify-content:space-between; gap:12px; border-radius:13px; padding:16px; background:var(--bg); border:1px solid var(--border); }
+.native-count span { font-size:11px; color:var(--muted); }.native-count strong { font-size:27px; font-variant-numeric:tabular-nums; }
+.native-feature { display:flex; align-items:center; gap:10px; color:var(--ink); font-size:12px; padding:8px 0; }
+.native-feature svg { color:var(--blue); flex-shrink:0; }
+.native-caution { padding:13px; margin:0; background:color-mix(in srgb,#f3a950 12%,var(--surface)); border:1px solid color-mix(in srgb,#f3a950 38%,var(--border)); color:var(--ink); border-radius:11px; font-size:11px; line-height:1.7; }
+@media(max-width:780px) { .native-grid { grid-template-columns:minmax(0,1fr); } }

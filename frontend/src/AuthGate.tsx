@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import App from './App';
 import Login from './Login';
 import OfflinePOS from './OfflinePOS';
+import NativeDesktop, { isNativeWindows } from './NativeDesktop';
 import { hasVault, lockVault } from './offlineVault';
 
 type Session = { authenticated: boolean; owner?: string };
@@ -23,7 +24,10 @@ export default function AuthGate() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  const nativeWindows = isNativeWindows();
   useEffect(() => {
+    // Do not attempt Django/cookie login from the packaged Tauri asset origin.
+    if (nativeWindows) return;
     const controller = new AbortController();
     (async () => {
       try {
@@ -51,7 +55,7 @@ export default function AuthGate() {
       }
     })();
     return () => controller.abort();
-  }, []);
+  }, [nativeWindows]);
 
   async function signIn(identifier: string, password: string) {
     setBusy(true);
@@ -95,6 +99,8 @@ export default function AuthGate() {
       setBusy(false);
     }
   }
+
+  if (nativeWindows) return <NativeDesktop/>;
 
   if (state === 'loading') {
     return <div className="auth-screen"><div className="auth-loading" role="status">

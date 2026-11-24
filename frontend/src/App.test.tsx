@@ -61,7 +61,7 @@ describe('PhoneStock Pro - phase 01', () => {
     render(<App/>);
     expect(await screen.findByText('Bienvenue dans YaraPhone')).toBeTruthy();
     expect(document.title).toBe('YaraPhone · Gestion de boutique');
-    expect(screen.getByTitle('YaraPhone')).toBeTruthy();
+    expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(2);
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Paramètres' })[0]);
     fireEvent.change(await screen.findByLabelText('Nom de la boutique *'), {
@@ -69,12 +69,12 @@ describe('PhoneStock Pro - phase 01', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer l’identité de ma boutique' }));
     await waitFor(() => {
-      expect(screen.getByTitle('YaraPhone Premium')).toBeTruthy();
+      expect(screen.getAllByTitle('YaraPhone Premium').length).toBeGreaterThanOrEqual(2);
       expect(document.title).toBe('YaraPhone Premium · Gestion de boutique');
     });
     fireEvent.click(screen.getAllByRole('button', { name: 'Tableau de bord' })[0]);
     expect(await screen.findByText('Bienvenue dans YaraPhone Premium')).toBeTruthy();
-    expect(screen.getByText(/Propulsé par PhoneStock Pro/)).toBeTruthy();
+    expect(screen.getAllByText(/Propulsé par PhoneStock Pro/).length).toBeGreaterThanOrEqual(1);
   });
 
   it('permet de changer le thème et mémorise le choix', async () => {

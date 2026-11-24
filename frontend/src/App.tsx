@@ -5,7 +5,7 @@ import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
   CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
   Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Wallet,
-  WifiOff, LogOut, X,
+  WifiOff, LogOut, X, UserRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Products from './Products';
@@ -17,8 +17,10 @@ import Reports from './Reports';
 import Expenses from './Expenses';
 import Notifications from './Notifications';
 import OfflinePOS from './OfflinePOS';
+import DashboardOverview from './DashboardOverview';
+import OwnerProfile from './OwnerProfile';
 
-type Page = 'dashboard' | 'checkout' | 'offline' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings';
+type Page = 'dashboard' | 'checkout' | 'offline' | 'products' | 'purchases' | 'debts' | 'reports' | 'expenses' | 'notifications' | 'settings' | 'profile';
 type ApiState = 'connecting' | 'online' | 'offline';
 type NavItem = { id: Page; label: string; icon: LucideIcon; description: string };
 
@@ -33,6 +35,7 @@ const nav: NavItem[] = [
   { id: 'expenses', label: 'Dépenses', icon: ReceiptText, description: 'Suivi simple des charges.' },
   { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alertes et événements importants.' },
   { id: 'settings', label: 'Paramètres', icon: Settings2, description: 'Factures, préférences et apparence.' },
+  { id: 'profile', label: 'Mon profil', icon: UserRound, description: 'Compte propriétaire et sécurité de connexion.' },
 ];
 
 const goals = [
@@ -152,9 +155,10 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
                 <LogOut size={18}/><span>Déconnexion</span>
               </button>
             ) : null}
-            <div className="avatar" aria-label={ownerName ? 'Connecté : ' + ownerName : 'Espace boutique'}>
+            <button type="button" className="avatar account-avatar" aria-label="Mon profil" title="Mon profil"
+              onClick={() => navigate('profile')}>
               {identity.logo_data ? <img src={identity.logo_data} alt="" /> : shopInitials(shopName)}
-            </div>
+            </button>
           </div>
         </header>
         <main className="workspace">
@@ -177,6 +181,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <Debts />
           ) : page === 'settings' ? (
             <ShopSettings onSaved={handleShopSaved} />
+          ) : page === 'profile' ? (
+            <OwnerProfile />
           ) : page === 'reports' ? (
             <Reports />
           ) : page === 'expenses' ? (
@@ -197,6 +203,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
                 </div>
                 <Smartphone className="hero-phone" size={136} strokeWidth={1}/>
               </section>
+              <DashboardOverview dark={dark}/>
               <div className="section-heading"><h3>Fonctionnalités disponibles</h3><span>Les outils du propriétaire de la boutique</span></div>
               <div className="feature-grid">
                 {goals.map(({ icon: Icon, title, subtitle }) => (

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { DEFAULT_SHOP, applyBrowserIdentity, normalizedIdentity, shopInitials, type ShopIdentity } from './shopIdentity';
+import type { Shop } from './ShopSettings';
 import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
   CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
@@ -51,6 +53,8 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [api, setApi] = useState<ApiState>('connecting');
+  const [identity, setIdentity] = useState<ShopIdentity>(DEFAULT_SHOP);
+  const shopName = identity.name;
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -72,6 +76,29 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
     return () => controller.abort();
   }, []);
 
+  // Full boutique settings are owner-only. Never cache the logo or customer information.
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/shop/', { credentials: 'same-origin', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Identité indisponible');
+        return await response.json() as { shop?: Shop };
+      })
+      .then(({ shop }) => {
+        if (!controller.signal.aborted && shop) setIdentity(normalizedIdentity(shop));
+      })
+      .catch(() => { /* Keep the neutral default if the session or API is unavailable. */ });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    applyBrowserIdentity(identity);
+  }, [identity]);
+
+  function handleShopSaved(shop: Shop) {
+    setIdentity(normalizedIdentity(shop));
+  }
+
   function navigate(destination: Page) {
     setPage(destination);
     setMenuOpen(false);
@@ -85,8 +112,10 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
       {menuOpen && <button className="backdrop" aria-label="Fermer le menu" onClick={() => setMenuOpen(false)} />}
       <aside className={'sidebar ' + (collapsed ? 'collapsed ' : '') + (menuOpen ? 'open' : '')}>
         <div className="brand">
-          <div className="brand-mark"><Smartphone size={23}/></div>
-          <div className="brand-name"><strong>PhoneStock <em>Pro</em></strong><small>GESTION COMMERCIALE</small></div>
+          <div className="brand-mark">{identity.logo_data
+            ? <img src={identity.logo_data} alt={'Logo ' + shopName}/>
+            : <Smartphone size={23}/>}</div>
+          <div className="brand-name" title={shopName}><strong>{shopName}</strong><small>ESPACE BOUTIQUE</small></div>
           <button className="close-menu" aria-label="Fermer" onClick={() => setMenuOpen(false)}><X size={19}/></button>
         </div>
         <div className="menu-divider"/>
@@ -102,14 +131,14 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         <div className="sidebar-bottom">
           <div className="menu-divider"/>
           <button className="collapse-control" onClick={() => setCollapsed((value) => !value)}><Menu size={19}/><span>Réduire le menu</span></button>
-          <p>PhoneStock Pro · Phase 08</p>
+          <p>Propulsé par PhoneStock Pro</p>
         </div>
       </aside>
       <div className="content">
         <header className="topbar">
           <div className="top-left">
             <button className="icon-btn hamburger" aria-label="Ouvrir le menu" onClick={() => setMenuOpen(true)}><Menu size={21}/></button>
-            <div><span className="top-eyebrow">ESPACE DE GESTION</span><h1>{selected.label}</h1></div>
+            <div className="topbar-location"><span className="top-eyebrow" title={shopName}>ESPACE DE GESTION · {shopName}</span><h1>{selected.label}</h1></div>
           </div>
           <div className="top-actions">
             <div className={'connection ' + (api === 'online' ? 'connected' : 'disconnected')}>
@@ -123,14 +152,16 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
                 <LogOut size={18}/><span>Déconnexion</span>
               </button>
             ) : null}
-            <div className="avatar" aria-label={ownerName ? 'Connecté : ' + ownerName : 'Profil de démonstration'}>PS</div>
+            <div className="avatar" aria-label={ownerName ? 'Connecté : ' + ownerName : 'Espace boutique'}>
+              {identity.logo_data ? <img src={identity.logo_data} alt="" /> : shopInitials(shopName)}
+            </div>
           </div>
         </header>
         <main className="workspace">
           <div className="page-title">
-            <div><span className="tag">PHASE 08 · COFFRE HORS LIGNE</span>
-              <h2>{page === 'dashboard' ? 'Bienvenue dans PhoneStock Pro' : selected.label}</h2>
-              <p>{page === 'dashboard' ? 'Le logiciel personnel de gestion de votre boutique commence ici.' : selected.description}</p>
+            <div><span className="tag">ESPACE PREMIUM · VOTRE BOUTIQUE</span>
+              <h2>{page === 'dashboard' ? 'Bienvenue dans ' + shopName : selected.label}</h2>
+              <p>{page === 'dashboard' ? 'Votre activité, vos stocks et vos ventes dans un espace conçu pour votre commerce.' : selected.description}</p>
             </div>
             <span className="phase-pill"><CheckCircle2 size={15}/> Caisse active</span>
           </div>
@@ -145,7 +176,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
           ) : page === 'debts' ? (
             <Debts />
           ) : page === 'settings' ? (
-            <ShopSettings />
+            <ShopSettings onSaved={handleShopSaved} />
           ) : page === 'reports' ? (
             <Reports />
           ) : page === 'expenses' ? (
@@ -156,10 +187,13 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             <>
               <section className="hero">
                 <div className="hero-text">
-                  <span>UN PROPRIÉTAIRE · PC ET TÉLÉPHONE</span>
-                  <h3>Une boutique mieux organisée, <em>sans complexité.</em></h3>
-                  <p>Téléphones, pochettes, ventes et créances dans une application élégante. Votre espace est désormais protégé par un compte propriétaire. La caisse, les stocks, les factures, les créances et les rapports sont disponibles.</p>
-                  <button onClick={() => navigate('checkout')}>Découvrir la caisse <ChevronRight size={17}/></button>
+                  <span>VOTRE COMMERCE, VOTRE IDENTITÉ</span>
+                  <h3>Pilotez <em>{shopName}</em> en toute simplicité.</h3>
+                  <p>Ventes, stocks, téléphones et IMEI, achats, créances et résultats réunis dans un seul espace professionnel.</p>
+                  <div className="hero-actions">
+                    <button onClick={() => navigate('checkout')}>Nouvelle vente <ChevronRight size={17}/></button>
+                    <button className="hero-secondary" onClick={() => navigate('reports')}>Voir les rapports</button>
+                  </div>
                 </div>
                 <Smartphone className="hero-phone" size={136} strokeWidth={1}/>
               </section>
@@ -181,7 +215,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
             </section>
           )}
         </main>
-        <footer>© PhoneStock Pro · Phase 08 — Développement local</footer>
+        <footer>© {shopName} · Tous droits réservés <span>· Propulsé par PhoneStock Pro</span></footer>
       </div>
       <nav className="bottom-nav" aria-label="Navigation mobile">
         {([

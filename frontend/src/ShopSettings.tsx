@@ -10,7 +10,7 @@ const csrf = () => {
   const cookie = document.cookie.split('; ').find((part) => part.startsWith('csrftoken='));
   return cookie ? decodeURIComponent(cookie.substring('csrftoken='.length)) : '';
 };
-export default function ShopSettings() {
+export default function ShopSettings({ onSaved }: { onSaved?: (shop: Shop) => void }) {
   const [form, setForm] = useState<Shop>({ ...empty });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,7 +69,8 @@ export default function ShopSettings() {
       const result = await response.json() as { shop?: Shop; detail?: string };
       if (!response.ok || !result.shop) throw new Error(result.detail || 'Enregistrement impossible.');
       setForm(result.shop);
-      setSaved('En-tête enregistré. Toutes les factures et tous les reçus, anciens et nouveaux, utiliseront cet en-tête lors de leur prochaine impression.');
+      onSaved?.(result.shop);
+      setSaved('Identité enregistrée ! Le nom et le logo s’affichent désormais dans le logiciel, ainsi que sur toutes les factures et tous les reçus.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement impossible.');
     } finally {
@@ -89,12 +90,16 @@ export default function ShopSettings() {
     <section className="shop-settings">
       <div className="shop-form-card">
         <div className="shop-heading"><Settings2 size={21}/>
-          <div><h3>En-tête des factures</h3>
-            <p>Le même en-tête apparaît sur toutes les factures et tous les reçus, même anciens.</p></div>
+          <div><h3>Identité de ma boutique</h3>
+            <p>Le nom et le logo sont repris dans le logiciel, à la connexion et sur les documents.</p></div>
         </div>
         {loading ? <p className="catalog-empty">Chargement des paramètres…</p> : (
           <form className="catalog-form" onSubmit={save}>
-            {field('name', 'Nom de la boutique *', 'Ex. Boutique Seydou')}
+            <div className="shop-identity-note">
+              <strong>Une seule identité, partout.</strong>
+              <span>Changez le nom ici, enregistrez : votre menu, votre tableau de bord et vos factures sont immédiatement personnalisés.</span>
+            </div>
+            {field('name', 'Nom de la boutique *', 'Ex. YaraPhone')}
             <div className="catalog-fields">
               {field('phone', 'Téléphone', '+223 …')}
               {field('email', 'Email', 'boutique@example.com', 'email')}
@@ -116,13 +121,20 @@ export default function ShopSettings() {
             {error && <p className="catalog-error" role="alert">{error}</p>}
             {saved && <p className="shop-saved" role="status">{saved}</p>}
             <button className="catalog-primary shop-save" type="submit" disabled={saving}>
-              <Save size={17}/>{saving ? 'Enregistrement…' : 'Enregistrer l’en-tête'}
+              <Save size={17}/>{saving ? 'Enregistrement…' : 'Enregistrer l’identité de ma boutique'}
             </button>
           </form>
         )}
       </div>
       <aside className="shop-preview-card">
-        <div className="shop-heading"><ShieldCheck size={19}/><div><h3>Aperçu de l’en-tête</h3><p>Identité de la boutique sur les factures.</p></div></div>
+        <div className="shop-heading"><ShieldCheck size={19}/><div><h3>Aperçu de votre identité</h3><p>Le même nom et le même logo dans toute votre boutique.</p></div></div>
+        <div className="shop-identity-preview">
+          <span className="shop-preview-label">APERÇU DANS LE LOGICIEL</span>
+          <div className="shop-mini-brand">
+            <span className="shop-mini-mark">{form.logo_data ? <img src={form.logo_data} alt="" /> : '✦'}</span>
+            <span><strong>{form.name || 'Votre boutique'}</strong><small>ESPACE BOUTIQUE</small></span>
+          </div>
+        </div>
         <div className="shop-letterhead-preview">
           {form.logo_data && <img src={form.logo_data} alt="Logo boutique"/>}
           <h3>{form.name || 'Nom de la boutique'}</h3>

@@ -65,7 +65,9 @@ describe('PhoneStock Pro — caisse intelligente', () => {
     );
     expect(add).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Ajouter Téléphone · Samsung · Galaxy A17' })).toBeTruthy();
-    expect(vi.mocked(fetch).mock.calls.some(([url]) => url.startsWith('/api/products/?q='))).toBe(true);
+    expect(vi.mocked(fetch).mock.calls.some(([url]) =>
+      typeof url === 'string' && url.startsWith('/api/products/?q=')
+    )).toBe(true);
     expect(screen.queryByText('Chargement des articles…')).toBeNull();
     expect(screen.getByText(/Ton panier est vide/)).toBeTruthy();
     expect(document.querySelectorAll('.pos-product-card').length).toBe(2);

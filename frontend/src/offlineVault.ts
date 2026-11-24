@@ -277,6 +277,9 @@ export async function createPortableTransfer(passphrase: string): Promise<string
     throw new Error('Utilise une phrase de transfert de 12 caractères minimum.');
   }
   const transfer: PortableTransfer = { catalog: await readCatalog(), drafts: await listPending() };
+  if (transfer.drafts.some((entry) => entry.status !== 'pending')) {
+    throw new Error('Résous les brouillons en conflit dans la version web avant le transfert vers Windows.');
+  }
   if (!transfer.catalog && transfer.drafts.length === 0) {
     throw new Error('Aucun produit ou brouillon à exporter.');
   }
@@ -321,8 +324,13 @@ export async function openPortableTransfer(content: string, passphrase: string):
   }
   if (!Array.isArray(decoded?.drafts) || decoded.drafts.length > 500 ||
     decoded.drafts.some((entry) => !entry || entry.id !== entry.payload?.client_ref ||
-      !/^[0-9a-f-]{36}$/i.test(entry.id) || entry.status !== 'pending' ||
-      !Array.isArray(entry.payload.lines) || entry.payload.lines.length === 0 ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.id) ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entry.payload?.device_ref ?? '') ||
+      entry.status !== 'pending' || !Array.isArray(entry.payload.lines) ||
+      entry.payload.lines.length === 0 || entry.payload.lines.length > 200 ||
+      entry.payload.lines.some((line) => typeof line.product_id !== 'string' ||
+        !Number.isSafeInteger(line.quantity) || line.quantity < 1 ||
+        typeof line.unit_price !== 'string' || !/^\d+(\.\d{1,2})?$/.test(line.unit_price)) ||
       entry.payload.origin !== 'offline' || typeof entry.created_at !== 'string')) {
     throw new Error('Brouillons du transfert invalides.');
   }

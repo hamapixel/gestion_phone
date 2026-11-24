@@ -257,3 +257,74 @@ export async function getDeviceRef() {
   }
   return config.device_ref;
 }
+
+
+/**
+ * Portable encrypted transfer between web Phase 08 and Windows Phase 09.
+ * Export creates an encrypted file only. The source IndexedDB is NEVER deleted.
+ * The transfer passphrase is separate from the destination native-vault phrase.
+ */
+export type PortableTransfer = {
+  catalog: CatalogSnapshot | null;
+  drafts: PendingSale[];
+};
+type TransferFile = { kind: 'yaraphone-encrypted-transfer'; version: 1; salt: string; sealed: Envelope };
+
+export async function createPortableTransfer(passphrase: string): Promise<string> {
+  if (native()) throw new Error('Le transfert est exporté depuis la version web.');
+  if (!isUnlocked()) throw new Error('Déverrouille le coffre web avant l’export.');
+  if (passphrase.length < 12 || passphrase.length > 1024) {
+    throw new Error('Utilise une phrase de transfert de 12 caractères minimum.');
+  }
+  const transfer: PortableTransfer = { catalog: await readCatalog(), drafts: await listPending() };
+  if (!transfer.catalog && transfer.drafts.length === 0) {
+    throw new Error('Aucun produit ou brouillon à exporter.');
+  }
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveKey(passphrase, salt);
+  const sealed = await seal(key, transfer, 'yaraphone-transfer-v1');
+  return JSON.stringify({ kind: 'yaraphone-encrypted-transfer', version: 1,
+    salt: base64(salt), sealed } satisfies TransferFile);
+}
+
+export async function openPortableTransfer(content: string, passphrase: string): Promise<PortableTransfer> {
+  if (content.length > 10_000_000) throw new Error('Fichier de transfert trop volumineux.');
+  if (passphrase.length < 12 || passphrase.length > 1024) {
+    throw new Error('Phrase de transfert invalide.');
+  }
+  let file: TransferFile;
+  try { file = JSON.parse(content) as TransferFile; }
+  catch { throw new Error('Fichier JSON illisible.'); }
+  if (file?.kind !== 'yaraphone-encrypted-transfer' || file.version !== 1 ||
+      typeof file.salt !== 'string' || !file.sealed || file.sealed.version !== 1) {
+    throw new Error('Ce fichier n’est pas un transfert YaraPhone chiffré.');
+  }
+  let decoded: PortableTransfer;
+  try {
+    decoded = await unseal<PortableTransfer>(
+      await deriveKey(passphrase, unbase64(file.salt)), file.sealed, 'yaraphone-transfer-v1',
+    );
+  } catch {
+    throw new Error('Phrase de transfert incorrecte ou fichier altéré.');
+  }
+  const catalog = decoded?.catalog;
+  if (catalog !== null && catalog !== undefined &&
+      (!Array.isArray(catalog.products) || typeof catalog.updated_at !== 'string' ||
+        catalog.products.length > 200 || catalog.products.some((p) =>
+          !p || typeof p.id !== 'string' || !p.id ||
+          typeof p.name !== 'string' || typeof p.sale_price !== 'string' ||
+          !Number.isFinite(Number(p.sale_price)) || Number(p.sale_price) <= 0 ||
+          !Number.isSafeInteger(p.quantity) || p.quantity < 0 ||
+          !['phone','case','other'].includes(p.category) ||
+          !['new','used'].includes(p.condition)))) {
+    throw new Error('Catalogue du transfert invalide.');
+  }
+  if (!Array.isArray(decoded?.drafts) || decoded.drafts.length > 500 ||
+    decoded.drafts.some((entry) => !entry || entry.id !== entry.payload?.client_ref ||
+      !/^[0-9a-f-]{36}$/i.test(entry.id) || entry.status !== 'pending' ||
+      !Array.isArray(entry.payload.lines) || entry.payload.lines.length === 0 ||
+      entry.payload.origin !== 'offline' || typeof entry.created_at !== 'string')) {
+    throw new Error('Brouillons du transfert invalides.');
+  }
+  return { catalog: catalog ?? null, drafts: decoded.drafts };
+}

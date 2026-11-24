@@ -28,3 +28,46 @@
 .native-feature svg { color:var(--blue); flex-shrink:0; }
 .native-caution { padding:13px; margin:0; background:color-mix(in srgb,#f3a950 12%,var(--surface)); border:1px solid color-mix(in srgb,#f3a950 38%,var(--border)); color:var(--ink); border-radius:11px; font-size:11px; line-height:1.7; }
 @media(max-width:780px) { .native-grid { grid-template-columns:minmax(0,1fr); } }
+
+
+/* Phase 09B: unlocked Windows app uses the genuine offline POS panels. */
+.native-shell--active { max-width:1510px; }
+.native-shell--active .native-header { padding:4px 2px; }
+.native-header-lock { margin-left:auto; display:inline-flex; gap:9px; align-items:center; justify-content:center;
+  min-height:39px; padding:9px 14px; border:1px solid var(--border); border-radius:11px;
+  color:var(--ink); background:var(--surface); font-size:11px; font-weight:780; }
+.native-header-lock:hover { border-color:var(--blue); color:var(--blue); }
+.native-active { display:grid; gap:13px; }
+.native-active-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  background:var(--surface); border:1px solid var(--border); border-radius:15px; box-shadow:var(--premium-shadow); padding:12px 16px; }
+.native-live-status { display:flex; align-items:center; gap:10px; flex-wrap:wrap; color:#24835c; font-size:12px; font-weight:800; }
+.native-live-status strong { background:var(--bg); color:var(--ink); border:1px solid var(--border);
+  border-radius:10px; padding:6px 10px; font-size:11px; font-variant-numeric:tabular-nums; }
+.native-import-panel,.offline-export-form { display:grid; gap:13px; border:1px solid color-mix(in srgb,var(--blue) 23%,var(--border));
+  border-radius:16px; background:var(--surface); padding:19px; box-shadow:var(--premium-shadow); }
+.native-import-panel>strong,.offline-export-form>strong { font-size:15px; letter-spacing:-.02em; }
+.native-import-panel p,.offline-export-form p { margin:0; font-size:11px; color:var(--muted); line-height:1.65; }
+.native-import-fields,.offline-export-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+.native-import-fields label,.offline-export-fields label { display:grid; gap:7px; font-size:11px; font-weight:760; }
+.native-import-fields input,.offline-export-fields input { width:100%; min-height:44px; min-width:0;
+  padding:10px; background:var(--surface); border:1px solid var(--border); color:var(--ink); border-radius:11px; }
+.native-import-panel>.native-primary,.offline-export-form>.offline-sync { justify-self:start; min-width:210px; }
+.native-active .offline-layout { grid-template-columns:minmax(0,1.45fr) minmax(345px,.95fr); }
+.native-active .offline-cart { position:sticky; top:16px; }
+.native-active .offline-catalog { height:clamp(390px,65vh,720px); }
+.offline-native-status { border:1px solid color-mix(in srgb,#e2a34a 28%,var(--border));
+  background:color-mix(in srgb,#e2a34a 10%,var(--surface)); border-radius:10px;
+  padding:9px 12px; font-size:11px; font-weight:720; color:var(--ink); }
+@media(max-width:1060px) {
+  .native-active .offline-layout { grid-template-columns:minmax(0,1fr); }
+  .native-active .offline-cart { position:static; }
+  .native-active .offline-catalog { height:clamp(340px,45vh,510px); }
+}
+@media(max-width:760px) {
+  .native-root { padding:16px 12px; }
+  .native-import-fields,.offline-export-fields { grid-template-columns:minmax(0,1fr); }
+  .native-header-lock { padding:9px; }
+  .native-active-toolbar { padding:12px; }
+  .native-active-toolbar>.offline-secondary { width:100%; }
+}
+@media print { .native-header-lock,.native-import-panel,.offline-export-form { display:none!important; } }

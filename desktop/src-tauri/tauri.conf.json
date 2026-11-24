@@ -4,8 +4,8 @@
   "version": "0.9.0",
   "identifier": "ml.btdigit.yaraphone",
   "build": {
-    "beforeDevCommand": "cd ../frontend && npm run dev",
-    "devUrl": "http://localhost:5178",
+    "beforeDevCommand": "cd ../frontend && npm run dev:native",
+    "devUrl": "http://127.0.0.1:5188",
     "beforeBuildCommand": "cd ../frontend && npm run build",
     "frontendDist": "../../frontend/dist"
   },

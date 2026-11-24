@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowDownLeft, ArrowUpRight, BarChart3, Clock3, HandCoins, RefreshCw,
+  ArrowDownLeft, ArrowUpRight, Clock3, HandCoins, RefreshCw,
   TrendingUp, Wallet, ReceiptText,
 } from 'lucide-react';
 import PeriodFilter, { localDay, periodQuery, type PeriodRange } from './PeriodFilter';
@@ -83,11 +83,7 @@ export default function DashboardOverview({ dark }: { dark: boolean }) {
   return (
     <section className="live-dashboard" aria-labelledby="live-dashboard-title">
       <header className="live-dashboard-heading">
-        <div>
-          <span className="live-dashboard-eyebrow"><BarChart3 size={15}/> DONNÉES RÉELLES · POSTGRESQL</span>
-          <h3 id="live-dashboard-title">Votre activité en chiffres</h3>
-          <p>Les montants se mettent à jour lorsque vous changez la période ou actualisez les données.</p>
-        </div>
+        <h3 id="live-dashboard-title">Aperçu financier</h3>
         <button type="button" className="live-dashboard-refresh" disabled={loading}
           onClick={() => setReload((value) => value + 1)}>
           <RefreshCw size={16}/> Actualiser

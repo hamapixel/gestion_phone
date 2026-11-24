@@ -275,7 +275,7 @@ export default function Debts() {
               </thead>
               <tbody>
                 {visiblePayments.map((payment) => (
-                  <tr key={payment.id} className="debt-history-card">
+                  <tr key={payment.id} className="debt-history-row">
                     <td data-label="Client" className="record-reference">
                       {payment.customer_name || 'Client'}
                       {payment.customer_phone && <small className="record-subline">{payment.customer_phone}</small>}

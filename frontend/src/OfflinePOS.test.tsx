@@ -45,6 +45,10 @@ describe('Caisse hors ligne', () => {
     expect(await screen.findByText('Pochette')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
     expect(screen.getByRole('region', { name: 'Défilement indépendant du panier' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Options de paiement du panier' })).toBeTruthy();
+    const save = screen.getByRole('button', { name: 'Enregistrer en attente' });
+    expect(save.closest('form')?.classList.contains('offline-checkout-form')).toBe(true);
+    expect(save.classList.contains('offline-save-button')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: /Enregistrer en attente/ }));
     await waitFor(() => {
       expect(storage.savePending).toHaveBeenCalledOnce();

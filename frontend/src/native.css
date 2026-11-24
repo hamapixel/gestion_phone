@@ -71,3 +71,111 @@
   .native-active-toolbar>.offline-secondary { width:100%; }
 }
 @media print { .native-header-lock,.native-import-panel,.offline-export-form { display:none!important; } }
+
+
+/* Phase 09 Windows — viewport-safe checkout (2026-11-24).
+   The app root is clipped by the web shell's overflow:hidden; give the
+   native page a real viewport-height scrolling box, not just min-height. */
+.native-root {
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+}
+.native-shell { min-width: 0; }
+.native-header > div:nth-child(2) { display: grid; gap: 5px; min-width: 0; }
+.native-header > div:nth-child(2) strong { font-size: 20px; }
+.native-header > div:nth-child(2) small { font-size: 10px; color: var(--muted); letter-spacing: .09em; }
+.offline-checkout-fields {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+/* Only the native window pins the action: the web version retains
+   normal document scrolling and all of its prior keyboard behavior. */
+.native-active .offline-cart {
+  height: clamp(350px, calc(100dvh - 410px), 680px);
+  max-height: none;
+  min-height: 0;
+  overflow: hidden;
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.native-active .offline-cart .offline-panel-title { flex: 0 0 auto; }
+.native-active .offline-cart .offline-cart-lines {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(25dvh, 200px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.native-active .offline-cart .offline-checkout-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  gap: 10px;
+}
+.native-active .offline-cart .pos-total {
+  flex: 0 0 auto;
+  min-height: 46px;
+}
+.native-active .offline-cart .offline-checkout-fields {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--blue) 30%, var(--border)) transparent;
+  padding: 2px 4px 7px 1px;
+}
+.native-active .offline-cart .offline-save-button {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 46px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 6px 18px rgba(36, 82, 196, .13);
+}
+.native-active .offline-checkout-fields:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+@media (max-width: 1060px) {
+  .native-active .offline-cart {
+    position: static;
+    height: min(610px, max(360px, calc(100dvh - 230px)));
+  }
+}
+@media (max-width: 760px) {
+  .native-root { padding-bottom: 22px; }
+  .native-active .offline-cart { height: min(560px, max(350px, calc(100dvh - 210px))); }
+  .native-active .offline-cart .offline-cart-lines { max-height: 180px; }
+}
+@media (max-height: 670px) and (min-width: 1061px) {
+  .native-active .offline-cart {
+    position: static;
+    height: 370px;
+  }
+}
+@media print {
+  .native-root { height: auto; min-height: 0; overflow: visible; }
+  .native-active .offline-cart,
+  .native-active .offline-cart .offline-checkout-form,
+  .native-active .offline-cart .offline-checkout-fields {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    position: static;
+  }
+}

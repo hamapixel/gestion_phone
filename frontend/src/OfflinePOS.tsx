@@ -397,7 +397,9 @@ export default function OfflinePOS({ standalone = false, onBack, onDraftChanged 
               }
               <form className="offline-checkout-form" onSubmit={saveDraft}>
                 <div className="pos-total"><span>Total provisoire</span><strong>{money(total)}</strong></div>
-                <div className="pos-pay-modes">
+                <div className="offline-checkout-fields" role="region"
+                  aria-label="Options de paiement du panier" tabIndex={0}>
+                  <div className="pos-pay-modes">
                   {([['all', 'Tout'], ['half', 'Moitié'], ['other', 'Autre montant']] as const).map(([id, label]) => (
                     <button key={id} type="button" disabled={busy} className={payMode === id ? 'selected' : ''}
                       onClick={() => setPayMode(id)}>{label}</button>
@@ -427,7 +429,9 @@ export default function OfflinePOS({ standalone = false, onBack, onDraftChanged 
                     <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={busy}/>
                   </label>
                 </div>}
-                <button type="submit" className="pos-submit" disabled={busy || cart.length === 0}>
+                </div>
+                <button type="submit" className="pos-submit offline-save-button"
+                  disabled={busy || cart.length === 0}>
                   <Save size={16}/> Enregistrer en attente
                 </button>
               </form>

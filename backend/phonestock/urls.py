@@ -5,7 +5,7 @@ from core.catalog_views import products, add_imei, adjust_stock, product_detail
 from core.purchase_views import suppliers, purchases
 from core.sale_views import sales, sale_detail
 from core.debt_views import debts, collect_debt, debt_payments
-from core.invoice_views import shop, invoice, payment_receipt
+from core.invoice_views import shop, shop_identity, invoice, payment_receipt
 from core.reporting_views import expenses, reports, notifications
 
 urlpatterns = [
@@ -22,6 +22,7 @@ urlpatterns = [
     path("api/debts/", debts, name="debts"),
     path("api/debt-payments/", debt_payments, name="debt-payments"),
     path("api/shop/", shop, name="shop"),
+    path("api/shop/identity/", shop_identity, name="shop-identity"),
     path("api/expenses/", expenses, name="expenses"),
     path("api/reports/", reports, name="reports"),
     path("api/notifications/", notifications, name="notifications"),

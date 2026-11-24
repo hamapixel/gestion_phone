@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .catalog_views import clean_text, owner_only
@@ -60,6 +61,17 @@ def validate_logo(value):
 
 def current_branding():
     return ShopConfig.objects.select_related("branding").get(pk=1).branding
+
+
+@require_GET
+@never_cache
+def shop_identity(request):
+    """Public-facing shop name/logo for the login screen; no contact or tax data."""
+    branding = current_branding()
+    return JsonResponse({"identity": {
+        "name": branding.name,
+        "logo_data": branding.logo_data,
+    }})
 
 
 @require_http_methods(["GET", "PUT"])

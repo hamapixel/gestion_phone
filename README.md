@@ -106,3 +106,14 @@ En bas de la page « Créances », une section **Liste des paiements de créance
 **Note importante :** cette phase est une base **web** ; elle ne transforme pas encore React en une application SQLite Windows/Android native. Le socle de synchronisation utilise le PostgreSQL Django existant comme source de vérité ; la base SQLite native et l'installation seront traitées dans une phase ultérieure.
 
 Ne jamais utiliser `docker compose down -v` : cette commande supprimerait la base PostgreSQL locale.
+
+
+## Personnalisation premium de l'identité boutique
+
+Dans **Paramètres → Identité de ma boutique**, configurer le nom, logo, téléphone, email, adresse et texte de facture. Après **Enregistrer l'identité de ma boutique**, le nom et le logo deviennent l'identité de l'interface : menu latéral, fil d'Ariane, tableau de bord, icône utilisateur, onglet du navigateur et page de connexion. La mise à jour des écrans déjà ouverts est immédiate, sans recharger l'application. Les factures et reçus (anciens et nouveaux) reprennent toujours l'en-tête actuel.
+
+- La page de connexion utilise `GET /api/shop/identity/` : seuls le **nom et le logo** sont publics, jamais le téléphone, l'email, l'adresse ou le NIF.
+- Le manifeste PWA utilise `GET /api/shop/manifest.webmanifest` et reprend le nom de la boutique lors d'une nouvelle installation ; sur une PWA **déjà installée**, le navigateur peut conserver l'ancien nom tant qu'il ne met pas le manifeste à jour (parfois réinstallation nécessaire).
+- Le logo de l'interface et le favicon s'adaptent au logo configuré. L'icône générique de secours reste celle du manifeste lorsque le navigateur réclame un format d'icône spécifique.
+- **PhoneStock Pro** reste cité discrètement comme fabricant du logiciel ; les titres et menus affichent prioritairement le nom de la boutique.
+- Cette personnalisation ne modifie aucune vente, facture comptable, IMEI, dette, licence ou base de données. Le thème jour/nuit, l'impression et le mode hors ligne restent fonctionnels.

@@ -409,3 +409,58 @@ input,select,textarea { max-width:100%; }
   .dashboard-welcome + .live-dashboard .live-dashboard-heading { display:flex; align-items:center; justify-content:space-between; }
   .dashboard-welcome + .live-dashboard .live-dashboard-refresh { width:auto; min-height:36px; padding:8px 11px; }
 }
+
+
+/* Hors connexion — focus-first premium layout with independent pane scrolling. */
+.offline-page { max-width:1440px; gap:12px; }
+.offline-heading { display:flex; align-items:center; justify-content:space-between; padding:0 1px; min-height:44px; }
+.offline-heading h3 { margin:0; font-size:17px; letter-spacing:-.028em; }
+.offline-top-actions .offline-secondary { min-height:37px; }
+.offline-safety { align-items:center; padding:10px 13px; font-size:11px; border-radius:10px; }
+.offline-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:9px; padding:10px 12px; box-shadow:var(--premium-shadow); }
+.offline-toolbar .offline-catalog-date { margin-right:auto; font-weight:700; color:var(--muted); }
+.offline-layout { grid-template-columns:minmax(0,1.45fr) minmax(345px,.95fr); align-items:start; gap:14px; }
+.offline-catalog,.offline-cart,.offline-queue { border-radius:17px; padding:16px; }
+.offline-catalog { height:clamp(400px,62vh,660px); min-height:0; display:flex; flex-direction:column; gap:12px; }
+.offline-cart { align-self:start; display:flex; flex-direction:column; gap:12px; position:sticky; top:12px; max-height:calc(100dvh - 120px); }
+.offline-panel-title { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:25px; }
+.offline-panel-title h4 { font-size:15px; font-weight:830; margin:0; letter-spacing:-.025em; }
+.offline-panel-title>span { border-radius:9px; padding:6px 9px; font-size:10px; font-weight:780; color:var(--muted); background:var(--bg); border:1px solid var(--border); white-space:nowrap; }
+.offline-search { flex-shrink:0; border-radius:11px; }
+.offline-products { min-height:0; flex:1 1 auto; align-content:start; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; scrollbar-width:none; padding:2px 3px 8px 1px; }
+.offline-products::-webkit-scrollbar,.offline-cart-lines::-webkit-scrollbar { display:none; }
+.offline-product { background:color-mix(in srgb,var(--blue) 2%,var(--surface)); border-radius:13px; transition:box-shadow .16s,border-color .16s; }
+.offline-product:hover { border-color:color-mix(in srgb,var(--blue) 32%,var(--border)); box-shadow:var(--premium-shadow-hover); }
+.offline-product button { border-radius:9px; min-height:35px; background:linear-gradient(110deg,#315ef3,#2353d5); }
+.offline-cart-lines { display:grid; min-height:0; max-height:clamp(95px,27vh,270px); overflow-y:auto; overflow-x:hidden; flex:0 1 auto; align-content:start; overscroll-behavior:contain; scrollbar-width:none; padding:1px 3px 3px 1px; }
+.offline-cart-lines .offline-line { background:color-mix(in srgb,var(--blue) 2%,var(--surface)); }
+.offline-checkout-form { min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+.offline-checkout-form::-webkit-scrollbar { display:none; }
+.offline-checkout-form .pos-total { border-radius:11px; }
+.offline-checkout-form .pos-submit { min-height:46px; border-radius:11px; font-weight:820; }
+.offline-queue { gap:10px; }
+.offline-pending-grid { gap:9px; }
+.offline-products:focus-visible,.offline-cart-lines:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:9px; }
+@media(max-width:1060px) {
+  .offline-layout { grid-template-columns:minmax(0,1fr); }
+  .offline-cart { position:static; max-height:none; }
+  .offline-catalog { height:clamp(350px,45vh,500px); }
+  .offline-cart-lines { max-height:260px; }
+  .offline-checkout-form { overflow:visible; }
+}
+@media(max-width:760px) {
+  .offline-page { gap:10px; }
+  .offline-heading { min-height:36px; }
+  .offline-heading h3 { font-size:15px; }
+  .offline-top-actions { display:flex; flex-wrap:wrap; gap:7px; }
+  .offline-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+  .offline-toolbar .offline-catalog-date { grid-column:1/-1; font-size:10px; }
+  .offline-toolbar .offline-secondary,.offline-toolbar .offline-sync { width:100%; min-height:42px; padding:8px 6px; }
+  .offline-catalog,.offline-cart,.offline-queue { padding:12px; gap:10px; }
+  .offline-catalog { height:340px; }
+  .offline-products { grid-template-columns:minmax(0,1fr); }
+  .offline-cart-lines { max-height:230px; }
+}
+@media(max-width:370px) {
+  .offline-toolbar { grid-template-columns:minmax(0,1fr); }
+}

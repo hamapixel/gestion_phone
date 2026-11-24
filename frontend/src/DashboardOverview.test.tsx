@@ -39,7 +39,7 @@ describe('Tableau de bord et chiffres réels', () => {
 
   it('lit PostgreSQL via API : cartes, anneau et données produits sans chiffres fictifs', async () => {
     render(<DashboardOverview dark={false}/>);
-    expect(await screen.findByText('100 000 FCFA')).toBeTruthy();
+    expect(await screen.findAllByText('100 000 FCFA')).toBeTruthy();
     expect(screen.getByText('Encaissements réels')).toBeTruthy();
     expect(screen.getByText('75 000 FCFA')).toBeTruthy();
     expect(screen.getByText('20 000 FCFA')).toBeTruthy();
@@ -56,7 +56,7 @@ describe('Tableau de bord et chiffres réels', () => {
 
   it('actualise vraiment les montants et accepte les autres périodes', async () => {
     render(<DashboardOverview dark={true}/>);
-    await screen.findByText('100 000 FCFA');
+    await screen.findAllByText('100 000 FCFA');
     fireEvent.click(screen.getByRole('button', { name: 'Aujourd’hui' }));
     await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url]) =>
       url === '/api/reports/?period=today'

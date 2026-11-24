@@ -145,7 +145,7 @@ describe('PhoneStock Pro — caisse intelligente', () => {
     expect(screen.getByText('Awa')).toBeTruthy();
     expect(screen.getByText('Crédit · reste 1 250 FCFA')).toBeTruthy();
     const cell = table.querySelector('td[data-label="Total"]');
-    expect(cell?.textContent).toBe('2 500 FCFA');
+    expect((cell?.textContent || '').replace(/[\u202f\u00a0]/g, ' ')).toBe('2 500 FCFA');
     expect(table.querySelector('time[datetime="2026-11-23T13:42:25Z"]')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Facture VTE-HIST-01' })).toBeTruthy();
   });

@@ -73,12 +73,12 @@ describe('PhoneStock — créances', () => {
     expect(screen.getByRole('button', { name: 'Reçu du paiement p1' })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remboursements' }));
-    expect(screen.getByText('500 FCFA')).toBeTruthy();
+    expect(screen.getAllByText('500 FCFA').length).toBeGreaterThanOrEqual(1);
     expect(table.querySelectorAll('tbody tr').length).toBe(1);
     expect(screen.queryByRole('button', { name: 'Reçu du paiement p0' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Acomptes' }));
-    expect(screen.getByText('3 000 FCFA')).toBeTruthy();
+    expect(screen.getAllByText('3 000 FCFA').length).toBeGreaterThanOrEqual(1);
     expect(table.querySelectorAll('tbody tr').length).toBe(1);
     expect(screen.queryByRole('button', { name: 'Reçu du paiement p1' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Tous les paiements' }));

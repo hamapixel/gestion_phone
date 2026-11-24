@@ -1,9 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { CloudUpload, LockKeyhole, RefreshCw, Save, ShieldAlert, Smartphone, Trash2, WifiOff } from 'lucide-react';
 import InvoiceModal from './InvoiceModal';
-import { deletePending, getDeviceRef, hasVault, isUnlocked, listPending, lockVault, readCatalog,
-  saveCatalog, savePending, unlockVault, type CatalogSnapshot, type OfflineProduct, type PendingSale,
-  type OfflineSalePayload } from './offlineVault';
+import { createPortableTransfer, deletePending, getDeviceRef, hasVault, isUnlocked, listPending,
+  lockVault, readCatalog, saveCatalog, savePending, unlockVault, type CatalogSnapshot,
+  type OfflineProduct, type PendingSale, type OfflineSalePayload } from './offlineVault';
 import { syncPendingSales } from './offlineSync';
 
 type BasketLine = { key: string; product: OfflineProduct; quantity: number; price: string; imei: string };
@@ -18,9 +18,10 @@ function productLabel(p: OfflineProduct) {
   return [p.name, p.brand && !lower.includes(p.brand.toLowerCase()) ? p.brand : '',
     p.model && !lower.includes(p.model.toLowerCase()) ? p.model : ''].filter(Boolean).join(' · ');
 }
-export default function OfflinePOS({ standalone = false, onBack }: {
-  standalone?: boolean; onBack?: () => void;
+export default function OfflinePOS({ standalone = false, onBack, onDraftChanged }: {
+  standalone?: boolean; onBack?: () => void; onDraftChanged?: () => void;
 }) {
+  const nativeWindows = typeof window !== 'undefined' && Boolean(window.__TAURI__?.core?.invoke);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [unlocked, setUnlocked] = useState(isUnlocked());
   const [passphrase, setPassphrase] = useState('');
@@ -43,6 +44,9 @@ export default function OfflinePOS({ standalone = false, onBack }: {
   const [confirmedIds, setConfirmedIds] = useState<{ id: string; reference: string }[]>([]);
   const [invoiceSaleId, setInvoiceSaleId] = useState<string | null>(null);
   const [deleteChoice, setDeleteChoice] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportPassphrase, setExportPassphrase] = useState('');
+  const [exportConfirm, setExportConfirm] = useState('');
 
   const refresh = async () => {
     const [cached, records] = await Promise.all([readCatalog(), listPending()]);
@@ -184,11 +188,16 @@ export default function OfflinePOS({ standalone = false, onBack }: {
       setCustomerName(''); setCustomerPhone(''); setDueDate('');
       setMessage('Vente sauvegardée localement et chiffrée · En attente de validation serveur.');
       await refresh();
+      onDraftChanged?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Enregistrement local impossible.');
     } finally { setBusy(false); }
   }
   async function sync() {
+    if (nativeWindows) {
+      setError('Synchronisation Windows indisponible : appairage sécurisé en préparation.');
+      return;
+    }
     if (busy) return;
     setBusy(true); setError(''); setMessage(''); setConfirmedIds([]);
     try {
@@ -227,10 +236,36 @@ export default function OfflinePOS({ standalone = false, onBack }: {
     try {
       await deletePending(entry.id);
       setDeleteChoice(null); await refresh();
+      onDraftChanged?.();
       setMessage('Proposition locale supprimée. Aucune vente serveur n’a été annulée.');
     } catch (err) { setError(err instanceof Error ? err.message : 'Suppression impossible.'); }
     finally { setBusy(false); }
   }
+  async function exportTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    if (exportPassphrase !== exportConfirm) {
+      setError('Les deux phrases de transfert sont différentes.');
+      return;
+    }
+    setBusy(true); setError(''); setMessage('');
+    try {
+      const bundle = await createPortableTransfer(exportPassphrase);
+      const url = URL.createObjectURL(new Blob([bundle], { type: 'application/json' }));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'yaraphone-transfert-chiffre-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportPassphrase(''); setExportConfirm(''); setExportOpen(false);
+      setMessage('Transfert chiffré créé. Importe-le dans YaraPhone Windows et garde la copie web.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export chiffré impossible.');
+    } finally { setBusy(false); }
+  }
+
   const offlineWarning = <p className="offline-safety">
     <ShieldAlert size={17}/> Stock indicatif · Toute vente reste en attente jusqu’à validation du serveur.
   </p>;
@@ -240,7 +275,7 @@ export default function OfflinePOS({ standalone = false, onBack }: {
       <header className="offline-heading">
         <h3><WifiOff size={19}/> Caisse locale</h3>
         <div className="offline-top-actions">
-          {unlocked && <button className="offline-secondary" onClick={() => {
+          {unlocked && !nativeWindows && <button className="offline-secondary" onClick={() => {
             lockVault(); setUnlocked(false); setCart([]); setCatalog(null); setPending([]); setMessage('');
           }}><LockKeyhole size={15}/> Verrouiller</button>}
           {standalone && <button className="offline-secondary" onClick={() => window.location.reload()}>
@@ -279,13 +314,36 @@ export default function OfflinePOS({ standalone = false, onBack }: {
             <span className="offline-catalog-date">
               {catalog?.updated_at ? 'Catalogue du ' + new Date(catalog.updated_at).toLocaleString('fr-FR') : 'Catalogue à télécharger'}
             </span>
-            <button className="offline-secondary" disabled={busy} onClick={() => void cacheCatalog()}>
-              <RefreshCw size={15}/> Actualiser le catalogue
-            </button>
-            <button className="offline-sync" disabled={busy || !pending.some((s) => s.status === 'pending')}
-              onClick={() => void sync()}><CloudUpload size={15}/> Synchroniser
-            </button>
+            {!nativeWindows && <>
+              <button className="offline-secondary" disabled={busy} onClick={() => void cacheCatalog()}>
+                <RefreshCw size={15}/> Actualiser le catalogue
+              </button>
+              <button className="offline-secondary" type="button" disabled={busy}
+                onClick={() => setExportOpen((current) => !current)}>
+                <LockKeyhole size={15}/> Export chiffré Windows
+              </button>
+              <button className="offline-sync" disabled={busy || !pending.some((s) => s.status === 'pending')}
+                onClick={() => void sync()}><CloudUpload size={15}/> Synchroniser
+              </button>
+            </>}
+            {nativeWindows && <span className="offline-native-status">SQLite chiffrée · Synchronisation non activée</span>}
           </div>
+          {exportOpen && !nativeWindows && <form className="offline-export-form" onSubmit={exportTransfer}>
+            <strong>Transférer vos produits et brouillons vers Windows</strong>
+            <p>Fichier chiffré par une phrase de transfert de 12 caractères minimum.
+              Les données du navigateur restent conservées.</p>
+            <div className="offline-export-fields">
+              <label>Phrase de transfert
+                <input aria-label="Phrase de transfert" type="password" autoComplete="off" required minLength={12}
+                  value={exportPassphrase} onChange={(e) => setExportPassphrase(e.target.value)}/>
+              </label>
+              <label>Confirmer la phrase de transfert
+                <input aria-label="Confirmer la phrase de transfert" type="password" autoComplete="off" required minLength={12}
+                  value={exportConfirm} onChange={(e) => setExportConfirm(e.target.value)}/>
+              </label>
+            </div>
+            <button type="submit" className="offline-sync" disabled={busy}>Créer le fichier chiffré</button>
+          </form>}
           <div className="offline-layout">
             <section className="offline-catalog" aria-label="Catalogue hors ligne">
               <div className="offline-panel-title">
@@ -294,7 +352,9 @@ export default function OfflinePOS({ standalone = false, onBack }: {
               </div>
               <input className="offline-search" aria-label="Rechercher hors ligne" placeholder="Rechercher un article…"
                 value={search} onChange={(e) => setSearch(e.target.value)}/>
-              {!catalog && <p className="phase7-empty">Connecte-toi une fois et clique « Mettre à jour le catalogue » pour préparer une utilisation hors ligne.</p>}
+              {!catalog && <p className="phase7-empty">{nativeWindows
+                ? 'Importe un fichier de transfert chiffré depuis la version web.'
+                : 'Connecte-toi une fois et clique « Actualiser le catalogue ».'}</p>}
               <div className="offline-products" role="region" aria-label="Défilement indépendant des produits" tabIndex={0}>
                 {visibleProducts.map((p) => (
                   <article className="offline-product" key={p.id}>
@@ -337,7 +397,9 @@ export default function OfflinePOS({ standalone = false, onBack }: {
               }
               <form className="offline-checkout-form" onSubmit={saveDraft}>
                 <div className="pos-total"><span>Total provisoire</span><strong>{money(total)}</strong></div>
-                <div className="pos-pay-modes">
+                <div className="offline-checkout-fields" role="region"
+                  aria-label="Options de paiement du panier" tabIndex={0}>
+                  <div className="pos-pay-modes">
                   {([['all', 'Tout'], ['half', 'Moitié'], ['other', 'Autre montant']] as const).map(([id, label]) => (
                     <button key={id} type="button" disabled={busy} className={payMode === id ? 'selected' : ''}
                       onClick={() => setPayMode(id)}>{label}</button>
@@ -367,7 +429,9 @@ export default function OfflinePOS({ standalone = false, onBack }: {
                     <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} disabled={busy}/>
                   </label>
                 </div>}
-                <button type="submit" className="pos-submit" disabled={busy || cart.length === 0}>
+                </div>
+                <button type="submit" className="pos-submit offline-save-button"
+                  disabled={busy || cart.length === 0}>
                   <Save size={16}/> Enregistrer en attente
                 </button>
               </form>
@@ -375,7 +439,7 @@ export default function OfflinePOS({ standalone = false, onBack }: {
           </div>
           <section className="offline-queue">
             <div className="offline-panel-title">
-              <h4>File de synchronisation</h4>
+              <h4>{nativeWindows ? 'Ventes locales en attente' : 'File de synchronisation'}</h4>
               <span>{pending.length} vente(s)</span>
             </div>
             {!pending.length && <p className="offline-empty">Aucune vente en attente sur cet appareil.</p>}

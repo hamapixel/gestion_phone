@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5178",
     "test": "vitest run",
-    "build": "tsc --noEmit && vite build"
+    "build": "tsc --noEmit && vite build",
+    "dev:native": "vite --host 127.0.0.1 --port 5188 --strictPort"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

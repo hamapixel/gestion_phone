@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Browser-only TS config intentionally omits @types/node; Vitest executes this test in Node.
 // @ts-ignore -- Node's built-in WebCrypto is available at test runtime.
 import { webcrypto } from 'node:crypto';
-import { deletePending, getDeviceRef, hasVault, listPending, lockVault,
-  readCatalog, saveCatalog, savePending, unlockVault } from './offlineVault';
+import { createPortableTransfer, deletePending, getDeviceRef, hasVault, listPending, lockVault,
+  openPortableTransfer, readCatalog, saveCatalog, savePending, unlockVault } from './offlineVault';
 
 /**
  * Tiny in-memory IndexedDB driver: tests the *real* AES-GCM/PBKDF2 vault code.
@@ -106,6 +106,37 @@ describe('Coffre local chiffré IndexedDB', () => {
     expect((await listPending())[0].payload.customer_name).toBe('Awa SECRET');
     await deletePending('00000000-0000-4000-8000-000000000001');
     expect(await listPending()).toEqual([]);
+  });
+
+  it('exporte un fichier de transfert chiffré, récupérable avec sa phrase, sans rien supprimer', async () => {
+    await unlockVault('Coffre Web propre et secret !');
+    const snapshot = { updated_at: '2026-11-23T10:00:00Z', products: [{
+      id: 'p1', name: 'Produit SECRET', brand: '', model: '',
+      category: 'other' as const, condition: 'new' as const, quantity: 10, sale_price: '2500.00',
+    }] };
+    await saveCatalog(snapshot);
+    const id = '00000000-0000-4000-8000-000000000001';
+    await savePending({
+      id, created_at: '2026-11-23T10:00:00Z', status: 'pending', error: '',
+      payload: { client_ref: id, origin: 'offline', device_ref: await getDeviceRef(),
+        lines: [{ product_id: 'p1', quantity: 1, unit_price: '2500.00', imei: '' }],
+        amount_paid: '2500.00', method: 'cash', customer_name: 'CLIENT SECRET',
+        customer_phone: '75000000', due_date: null },
+    });
+    const bundle = await createPortableTransfer('Phrase de transfert unique 2026 !');
+    expect(bundle).toContain('yaraphone-encrypted-transfer');
+    expect(bundle).not.toContain('Produit SECRET');
+    expect(bundle).not.toContain('CLIENT SECRET');
+    const transferred = await openPortableTransfer(bundle, 'Phrase de transfert unique 2026 !');
+    expect(transferred.catalog).toEqual(snapshot);
+    expect(transferred.drafts[0].payload.customer_name).toBe('CLIENT SECRET');
+    expect((await readCatalog())?.products[0].name).toBe('Produit SECRET');
+    expect((await listPending()).length).toBe(1);
+    await expect(openPortableTransfer(bundle, 'Incorrecte 123456')).rejects.toThrow('incorrecte');
+    const modified = JSON.parse(bundle);
+    modified.sealed.ciphertext = modified.sealed.ciphertext.slice(0, -3) + 'AAA';
+    await expect(openPortableTransfer(JSON.stringify(modified), 'Phrase de transfert unique 2026 !'))
+      .rejects.toThrow('altéré');
   });
 
   it('refuse l’ouverture sans phrase assez longue', async () => {

@@ -1,0 +1,36 @@
+name: Windows Tauri native prototype
+
+on:
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'frontend/src/NativeDesktop*'
+      - 'frontend/src/AuthGate.tsx'
+      - 'frontend/src/main.tsx'
+      - 'frontend/src/native.css'
+      - '.github/workflows/native-windows.yml'
+  workflow_dispatch:
+
+jobs:
+  native-windows:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+      - name: Install dependencies
+        run: |
+          npm --prefix frontend install --no-audit --no-fund
+          npm --prefix desktop install --no-audit --no-fund
+      - name: Validate frontend
+        run: npm --prefix frontend run build
+      - name: Native Rust unit tests
+        run: cargo test --manifest-path desktop/src-tauri/Cargo.toml --lib
+      - name: Build unsigned Windows NSIS prototype
+        run: npm --prefix desktop run build

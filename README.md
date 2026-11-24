@@ -117,3 +117,18 @@ Dans **Paramètres → Identité de ma boutique**, configurer le nom, logo, tél
 - Le logo de l'interface et le favicon s'adaptent au logo configuré. L'icône générique de secours reste celle du manifeste lorsque le navigateur réclame un format d'icône spécifique.
 - **PhoneStock Pro** reste cité discrètement comme fabricant du logiciel ; les titres et menus affichent prioritairement le nom de la boutique.
 - Cette personnalisation ne modifie aucune vente, facture comptable, IMEI, dette, licence ou base de données. Le thème jour/nuit, l'impression et le mode hors ligne restent fonctionnels.
+
+
+## Tableau de bord dynamique (Chart.js) et compte propriétaire
+
+L'accueil du propriétaire affiche **les données enregistrées en PostgreSQL**, lues à chaque visite dans l'API \`GET /api/reports/\` (authentification obligatoire) avec choix **Aujourd'hui / Semaine / Mois / Année / Période** et bouton Actualiser.
+
+- Six cartes lisibles : chiffre d'affaires des ventes de la période, encaissements réellement reçus pendant la période (incluant paiements d'anciennes créances), créances encore dues des ventes de la période, marge brute historique, dépenses et résultat indicatif.
+- **Chart.js 4.6.1** : anneau dynamique répartissant le total des ventes de la période entre **déjà réglé sur ces ventes** et **reste dû sur ces ventes**, courbe des ventes/marges par jour, barres des 5 marchandises les plus vendues par montant. Les graphiques sont remontés à partir des données réelles, jamais de données de démonstration.
+- Période sans vente : état vide explicite. Erreur réseau : aucune carte avec des zéros supposés. Tous les graphiques sont responsives sur PC/tablette/mobile et s'adaptent au thème.
+- L'anneau utilise \`ventes_de_la_période - reste_dû_de_ces_ventes\` : **ne pas y injecter \`collected\`**, qui peut contenir le remboursement d'une dette d'une ancienne période.
+- Les calculs en FCFA restent côté Django (Decimal) ; Chart.js convertit uniquement les résultats pour le rendu visuel.
+
+**Mon profil** est accessible depuis la navigation ou le bouton avatar dans la barre supérieure. Le propriétaire peut mettre à jour prénom, nom et adresse email du compte via \`GET/PUT /api/account/profile/\`, et modifier son mot de passe via \`POST /api/account/password/\`. Le compte reste le seul propriétaire ; l'identifiant de connexion est conservé. Le mot de passe actuel est obligatoire, les validateurs Django s'appliquent au nouveau, les écritures exigent une session Django et CSRF. Après modification du mot de passe, la session courante reste ouverte et les autres sessions sont invalidées par le changement du hash d'authentification. Aucun mot de passe n'est renvoyé dans les réponses.
+
+**Tester** : créer une vente à crédit avec acompte et vérifier que chiffre d'affaires, encaissements et solde sont différents ; ajouter une dépense et revenir au tableau de bord pour constater l'effet sur le résultat indicatif ; réinitialiser le mot de passe avec son mot de passe courant et vérifier que la session reste active. L'interface « Mon profil » n'est pas visible pour un utilisateur non connecté. Ne jamais utiliser \`docker compose down -v\`.

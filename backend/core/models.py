@@ -248,3 +248,28 @@ class Expense(models.Model):
 
     class Meta:
         ordering = ["-spent_on", "-created_at"]
+
+class DesktopPairingCode(models.Model):
+    """One-use code; only a keyed digest is stored."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE, related_name="pairing_codes")
+    digest = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class TrustedDesktop(models.Model):
+    """Revocable Windows machine authorization. No bearer token in plaintext."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey("auth.User", on_delete=models.CASCADE, related_name="trusted_desktops")
+    device_ref = models.UUIDField()
+    label = models.CharField(max_length=80)
+    token_digest = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["owner", "device_ref"], name="unique_trusted_desktop")]

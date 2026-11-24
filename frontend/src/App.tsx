@@ -3,8 +3,8 @@ import { DEFAULT_SHOP, applyBrowserIdentity, normalizedIdentity, shopInitials, t
 import type { Shop } from './ShopSettings';
 import {
   Bell, Boxes, ChartNoAxesCombined, CheckCircle2, ChevronRight, Cloud,
-  CreditCard, LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
-  Settings2, ShieldCheck, ShoppingCart, Smartphone, Sun, Wallet,
+  LayoutDashboard, Menu, Moon, PackagePlus, ReceiptText,
+  Settings2, ShoppingCart, Smartphone, Sun, Wallet,
   WifiOff, LogOut, X, UserRound,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -38,13 +38,6 @@ const nav: NavItem[] = [
   { id: 'profile', label: 'Mon profil', icon: UserRound, description: 'Compte propriétaire et sécurité de connexion.' },
 ];
 
-const goals = [
-  { icon: ShieldCheck, title: 'Connexion sécurisée', subtitle: 'Phase 02 · Accès sécurisé actif' },
-  { icon: Boxes, title: 'Produits & IMEI', subtitle: 'Phase 03 · Catalogue et stock' },
-  { icon: ShoppingCart, title: 'Panier intelligent', subtitle: 'Phase 05 · Caisse et ventes actives' },
-  { icon: CreditCard, title: 'Factures & créances', subtitle: 'Créances et factures personnalisées actives' },
-];
-
 const preferredTheme = (): boolean => {
   try { return localStorage.getItem('phonestock-theme') === 'dark'; }
   catch { return false; }
@@ -57,7 +50,9 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
   const [collapsed, setCollapsed] = useState(false);
   const [api, setApi] = useState<ApiState>('connecting');
   const [identity, setIdentity] = useState<ShopIdentity>(DEFAULT_SHOP);
+  const [ownerDisplayName, setOwnerDisplayName] = useState('');
   const shopName = identity.name;
+  const greetingName = ownerDisplayName || ownerName?.trim() || '';
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -97,6 +92,32 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
   useEffect(() => {
     applyBrowserIdentity(identity);
   }, [identity]);
+
+  // The welcome addresses the signed-in person, not the shop name.
+  // The username from AuthGate remains a fallback if the profile request fails.
+  useEffect(() => {
+    if (page !== 'dashboard') return;
+    const controller = new AbortController();
+    fetch('/api/account/profile/', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Profil indisponible');
+        return await response.json() as {
+          profile?: { first_name?: string; display_name?: string; username?: string };
+        };
+      })
+      .then(({ profile }) => {
+        if (controller.signal.aborted || !profile) return;
+        const name = profile.first_name?.trim() ||
+          profile.display_name?.trim() || profile.username?.trim() || '';
+        setOwnerDisplayName(name);
+      })
+      .catch(() => { /* The authenticated session name remains available. */ });
+    return () => controller.abort();
+  }, [page]);
 
   function handleShopSaved(shop: Shop) {
     setIdentity(normalizedIdentity(shop));
@@ -162,13 +183,16 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
           </div>
         </header>
         <main className="workspace">
-          <div className="page-title">
-            <div><span className="tag">ESPACE PREMIUM · VOTRE BOUTIQUE</span>
-              <h2>{page === 'dashboard' ? 'Bienvenue dans ' + shopName : selected.label}</h2>
-              <p>{page === 'dashboard' ? 'Votre activité, vos stocks et vos ventes dans un espace conçu pour votre commerce.' : selected.description}</p>
+          {page === 'dashboard' ? (
+            <div className="dashboard-welcome" aria-label="Accueil du propriétaire">
+              <h2>Bienvenue{greetingName ? ', ' + greetingName : ''} !</h2>
             </div>
-            <span className="phase-pill"><CheckCircle2 size={15}/> Caisse active</span>
-          </div>
+          ) : (
+            <div className="page-title">
+              <div><h2>{selected.label}</h2><p>{selected.description}</p></div>
+              <span className="phase-pill"><CheckCircle2 size={15}/> Caisse active</span>
+            </div>
+          )}
           {page === 'products' ? (
             <Products />
           ) : page === 'checkout' ? (
@@ -190,28 +214,7 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
           ) : page === 'notifications' ? (
             <Notifications onNavigate={navigate} />
           ) : page === 'dashboard' ? (
-            <>
-              <section className="hero">
-                <div className="hero-text">
-                  <span>VOTRE COMMERCE, VOTRE IDENTITÉ</span>
-                  <h3>Pilotez <em>{shopName}</em> en toute simplicité.</h3>
-                  <p>Ventes, stocks, téléphones et IMEI, achats, créances et résultats réunis dans un seul espace professionnel.</p>
-                  <div className="hero-actions">
-                    <button onClick={() => navigate('checkout')}>Nouvelle vente <ChevronRight size={17}/></button>
-                    <button className="hero-secondary" onClick={() => navigate('reports')}>Voir les rapports</button>
-                  </div>
-                </div>
-                <Smartphone className="hero-phone" size={136} strokeWidth={1}/>
-              </section>
-              <DashboardOverview dark={dark}/>
-              <div className="section-heading"><h3>Fonctionnalités disponibles</h3><span>Les outils du propriétaire de la boutique</span></div>
-              <div className="feature-grid">
-                {goals.map(({ icon: Icon, title, subtitle }) => (
-                  <article className="feature-card" key={title}><div className="feature-icon"><Icon size={22}/></div><h4>{title}</h4><p>{subtitle}</p></article>
-                ))}
-              </div>
-              <section className="note"><CheckCircle2 size={20}/><div><strong>Accès propriétaire sécurisé</strong><p>L'accès au tableau de bord nécessite une connexion. Chaque vente et mouvement de stock est enregistré dans PostgreSQL.</p></div></section>
-            </>
+            <DashboardOverview dark={dark}/>
           ) : (
             <section className="placeholder">
               <div className="placeholder-icon"><ActiveIcon size={32}/></div>

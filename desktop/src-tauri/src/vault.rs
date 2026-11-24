@@ -268,6 +268,31 @@ impl NativeVault {
         })
     }
 
+    /// Opaque stable device ID derived from the per-vault random salt.
+    /// Not a secret; this avoids a second writable identity file.
+    pub fn device_ref(&self) -> Result<String, String> {
+        self.with_key(|_| {
+            let db = self.connection()?;
+            let salt: Vec<u8> = db
+                .query_row("SELECT salt FROM vault_meta WHERE id=1", [], |row| row.get(0))
+                .map_err(failed)?;
+            Ok(Uuid::new_v5(&Uuid::NAMESPACE_OID, &salt).to_string())
+        })
+    }
+
+    /// Explicit deletion only; no implicit deletion after network errors.
+    pub fn delete_draft(&self, ref_id: &str) -> Result<bool, String> {
+        Uuid::parse_str(ref_id).map_err(|_| "Référence UUID invalide.".to_string())?;
+        self.with_key(|_| {
+            let db = self.connection()?;
+            let changed = db.execute(
+                "DELETE FROM pending_sales WHERE client_ref = ?1",
+                params![ref_id],
+            ).map_err(failed)?;
+            Ok(changed == 1)
+        })
+    }
+
     pub fn save_catalog(&self, payload_json: &str) -> Result<(), String> {
         if payload_json.len() > 5 * MAX_PAYLOAD {
             return Err("Catalogue trop volumineux.".to_string());
@@ -327,6 +352,8 @@ mod tests {
         let vault = NativeVault::new(path.clone()).unwrap();
         assert!(!vault.status().unwrap().initialized);
         vault.unlock("Ma phrase secrete longue et unique").unwrap();
+        let device_ref = vault.device_ref().unwrap();
+        assert!(Uuid::parse_str(&device_ref).is_ok());
         assert!(vault.save_draft(&id, &sale(&id)).unwrap());
         assert!(!vault.save_draft(&id, &sale(&id)).unwrap());
         let mut modified: serde_json::Value = serde_json::from_str(&sale(&id)).unwrap();
@@ -344,7 +371,11 @@ mod tests {
         let reloaded = NativeVault::new(path.clone()).unwrap();
         assert!(reloaded.unlock("Mot de passe errone 123").is_err());
         reloaded.unlock("Ma phrase secrete longue et unique").unwrap();
+        assert_eq!(reloaded.device_ref().unwrap(), device_ref);
         assert_eq!(reloaded.list_drafts().unwrap().len(), 1);
+        assert!(reloaded.delete_draft(&id).unwrap());
+        assert!(!reloaded.delete_draft(&id).unwrap());
+        assert!(reloaded.list_drafts().unwrap().is_empty());
         fs::remove_file(path).unwrap();
     }
 

@@ -25,6 +25,16 @@ fn native_list_drafts(vault: State<'_, NativeVault>) -> Result<Vec<NativeDraft>,
     vault.list_drafts()
 }
 #[tauri::command]
+fn native_device_ref(vault: State<'_, NativeVault>) -> Result<String, String> {
+    vault.device_ref()
+}
+#[tauri::command]
+fn native_delete_draft(
+    vault: State<'_, NativeVault>, client_ref: String,
+) -> Result<bool, String> {
+    vault.delete_draft(&client_ref)
+}
+#[tauri::command]
 fn native_save_catalog(
     vault: State<'_, NativeVault>, payload_json: String,
 ) -> Result<(), String> {
@@ -51,6 +61,8 @@ pub fn run() {
             native_lock,
             native_save_draft,
             native_list_drafts,
+            native_device_ref,
+            native_delete_draft,
             native_save_catalog,
             native_read_catalog,
         ])

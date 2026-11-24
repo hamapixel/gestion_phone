@@ -162,7 +162,9 @@ export default function App({ ownerName, onLogout }: { ownerName?: string; onLog
         <header className="topbar">
           <div className="top-left">
             <button className="icon-btn hamburger" aria-label="Ouvrir le menu" onClick={() => setMenuOpen(true)}><Menu size={21}/></button>
-            <div className="topbar-location"><span className="top-eyebrow" title={shopName}>ESPACE DE GESTION · {shopName}</span><h1>{selected.label}</h1></div>
+            <div className="topbar-location">{page !== 'dashboard' && (
+              <span className="top-eyebrow" title={shopName}>ESPACE DE GESTION · {shopName}</span>
+            )}<h1>{selected.label}</h1></div>
           </div>
           <div className="top-actions">
             <div className={'connection ' + (api === 'online' ? 'connected' : 'disconnected')}>

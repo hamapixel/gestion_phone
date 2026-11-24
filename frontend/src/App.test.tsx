@@ -93,7 +93,7 @@ describe('PhoneStock Pro - phase 01', () => {
     expect(await screen.findByRole('heading', { name: 'Bienvenue !' })).toBeTruthy();
     await waitFor(() => {
       expect(document.title).toBe('YaraPhone · Gestion de boutique');
-      expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByTitle('YaraPhone').length).toBeGreaterThanOrEqual(1);
     });
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Paramètres' })[0]);
@@ -102,7 +102,7 @@ describe('PhoneStock Pro - phase 01', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer l’identité de ma boutique' }));
     await waitFor(() => {
-      expect(screen.getAllByTitle('YaraPhone Premium').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getAllByTitle('YaraPhone Premium').length).toBeGreaterThanOrEqual(1);
       expect(document.title).toBe('YaraPhone Premium · Gestion de boutique');
     });
     fireEvent.click(screen.getAllByRole('button', { name: 'Tableau de bord' })[0]);

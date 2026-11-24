@@ -74,6 +74,28 @@ def shop_identity(request):
     }})
 
 
+@require_GET
+@never_cache
+def shop_manifest(request):
+    """Give the installed web app its current boutique name without private fields."""
+    branding = current_branding()
+    return JsonResponse({
+        "name": branding.name + " — Gestion de boutique",
+        "short_name": branding.name[:24],
+        "description": "Gestion sécurisée de ventes et stocks de la boutique.",
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#101c32",
+        "theme_color": "#101c32",
+        "lang": "fr",
+        "icons": [{
+            "src": "/icon.svg", "sizes": "any",
+            "type": "image/svg+xml", "purpose": "any"
+        }],
+    }, content_type="application/manifest+json")
+
+
 @require_http_methods(["GET", "PUT"])
 @owner_only
 def shop(request):

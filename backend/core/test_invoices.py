@@ -112,6 +112,13 @@ class InvoiceTests(TestCase):
             self.assertNotIn(sensitive, response.content.decode())
         self.assertIn("no-cache", response.headers.get("Cache-Control", ""))
         self.assertEqual(guest.get(reverse("shop")).status_code, 401)
+        manifest = guest.get(reverse("shop-manifest"))
+        self.assertEqual(manifest.status_code, 200)
+        self.assertTrue(manifest["Content-Type"].startswith("application/manifest+json"))
+        self.assertEqual(manifest.json()["name"], "YaraPhone — Gestion de boutique")
+        self.assertEqual(manifest.json()["short_name"], "YaraPhone")
+        self.assertNotIn("74980744", manifest.content.decode())
+        self.assertNotIn("boutique@example.com", manifest.content.decode())
 
     def test_same_shop_information_does_not_create_version(self):
         response = self.save_shop(self.shop_data())

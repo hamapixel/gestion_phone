@@ -55,8 +55,20 @@ describe('PhoneStock Pro — caisse intelligente', () => {
 
   it('affiche les produits en cartes et le panier vide sans données fictives', async () => {
     render(<Checkout/>);
-    expect(await screen.findByRole('button', { name: 'Ajouter Pochette A17' })).toBeTruthy();
+    // The catalogue loads asynchronously. On Windows + Docker, parallel jsdom
+    // workers can delay React scheduling without a functional UI regression.
+    // Wait for the actual product card, not a fixed sleep or a mock-only assertion.
+    const add = await screen.findByRole(
+      'button',
+      { name: 'Ajouter Pochette A17' },
+      { timeout: 10000 },
+    );
+    expect(add).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Ajouter Téléphone · Samsung · Galaxy A17' })).toBeTruthy();
+    expect(vi.mocked(fetch).mock.calls.some(([url]) =>
+      typeof url === 'string' && url.startsWith('/api/products/?q=')
+    )).toBe(true);
+    expect(screen.queryByText('Chargement des articles…')).toBeNull();
     expect(screen.getByText(/Ton panier est vide/)).toBeTruthy();
     expect(document.querySelectorAll('.pos-product-card').length).toBe(2);
     expect(screen.getByRole('button', { name: 'Valider la vente' }).hasAttribute('disabled')).toBe(true);

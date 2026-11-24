@@ -48,6 +48,8 @@ def sale_data(sale):
     return {
         "id": str(sale.id), "reference": "VTE-" + sale.id.hex[:10].upper(),
         "client_ref": str(sale.client_ref),
+        "origin": sale.origin,
+        "device_ref": str(sale.device_ref) if sale.device_ref else None,
         "created_at": sale.created_at.isoformat(),
         "status": sale.status, "method": sale.method,
         "customer_name": sale.customer_name, "customer_phone": sale.customer_phone,
@@ -82,6 +84,15 @@ def sales(request):
     try:
         payload = read_payload(request)
         ref = UUID(str(payload.get("client_ref")))
+        origin = payload.get("origin", "online")
+        if origin not in ("online", "offline"):
+            raise ValueError("Origine de vente invalide.")
+        if origin == "offline":
+            device_ref = UUID(str(payload.get("device_ref")))
+        elif payload.get("device_ref"):
+            device_ref = UUID(str(payload.get("device_ref")))
+        else:
+            device_ref = None
         raw_lines = payload.get("lines")
         if not isinstance(raw_lines, list) or not 1 <= len(raw_lines) <= MAX_LINES:
             raise ValueError("Ajoute entre 1 et 80 articles au panier.")
@@ -185,6 +196,7 @@ def sales(request):
             brand = ShopConfig.objects.select_related("branding").get(pk=1).branding
             sale = Sale.objects.create(
                 client_ref=ref, payload_hash=fingerprint, owner=request.user, branding=brand,
+                origin=origin, device_ref=device_ref,
                 customer_name=customer_name, customer_phone=customer_phone, due_date=due_date,
                 method=method, status=status, total=total, cost_total=cost_total,
                 gross_profit=total - cost_total, amount_paid=paid, balance=balance,

@@ -91,3 +91,18 @@ En bas de la page « Créances », une section **Liste des paiements de créance
 **Notifications :** alertes calculées à l'ouverture ou par clic sur Actualiser (stock faible ou épuisé, créances en retard ou arrivant dans les trois jours). Aucun envoi en tâche de fond pour l'instant.
 
 **Relances WhatsApp :** depuis Créances, choisir un texte poli ou ferme, le modifier, puis cliquer « Ouvrir WhatsApp ». Le logiciel n'envoie pas le message automatiquement.
+
+
+## Phase 08 — Premier socle de fonctionnement hors connexion
+
+1. Ouvrir **Hors connexion** lorsque Django est accessible. Choisir une **phrase secrète distincte du mot de passe**, d'au moins huit caractères. La clé ne reste qu'en mémoire et les données locales sont chiffrées AES-GCM par WebCrypto ; la phrase n'est jamais envoyée au serveur.
+2. Cliquer **Mettre à jour le catalogue** avant de couper le réseau. Le navigateur mémorise au plus 200 articles (limite actuelle de l'API). Les quantités ne sont que le dernier état observé, **pas une réservation** ; la vérification est toujours faite par Django à la synchronisation.
+3. Dans le coffre, composer un panier et enregistrer **en attente**. Les ventes avec téléphone exigent un IMEI saisi manuellement ; un brouillon ne diminue pas le stock central, ne met pas à jour les chiffres du jour et ne crée aucune facture définitive.
+4. Dès que le réseau revient, se connecter au même propriétaire, déverrouiller le coffre local, puis cliquer **Synchroniser les ventes**. Les opérations sont transmises une à une avec leur `client_ref` d'origine ; Django vérifie les stocks/IMEI et accepte sans doublon les retransmissions identiques. Les conflits restent visibles et demandent une intervention manuelle.
+5. Le coffre est **local à un navigateur/appareil** : les brouillons non synchronisés ne sont pas partagés avec un autre PC ou téléphone. Une vente en conflit n'est jamais automatiquement confirmée. Les factures n'existent qu'après confirmation serveur.
+
+**Sécurité et limites :** les cookies, mots de passe et données d'API ne sont jamais enregistrés dans le cache HTTP du Service Worker. Les brouillons/coordonnées clients sont chiffrés dans IndexedDB. Si le navigateur efface ses données, si l'appareil est perdu ou si la phrase secrète est oubliée, les brouillons peuvent être irrécupérables. Le coffre n'est pas une sauvegarde. Le navigateur exige HTTPS ou `localhost` pour utiliser WebCrypto/Service Worker ; pour ouvrir le PC depuis un téléphone, `localhost:5178` sur le téléphone ne pointe pas vers le PC. Une adresse HTTPS accessible et sécurisée sera nécessaire.
+
+**Note importante :** cette phase est une base **web** ; elle ne transforme pas encore React en une application SQLite Windows/Android native. Le socle de synchronisation utilise le PostgreSQL Django existant comme source de vérité ; la base SQLite native et l'installation seront traitées dans une phase ultérieure.
+
+Ne jamais utiliser `docker compose down -v` : cette commande supprimerait la base PostgreSQL locale.
